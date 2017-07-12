@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "485574892920",
+    "firebase_url": "https://condividifacile-c1a74.firebaseio.com",
+    "project_id": "condividifacile-c1a74",
+    "storage_bucket": "condividifacile-c1a74.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:485574892920:android:1dccc71cc777525d",
+        "android_client_info": {
+          "package_name": "io.condividifacile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "485574892920-fq2gi95r58gtmcagmkll1cdm927v3alf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAK6CK-r6vCt0zw3CePE1sMRA52CzUvDq8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
