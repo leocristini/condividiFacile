@@ -18,6 +18,12 @@
         <activity android:name=".MainActivity">
 
         </activity>
+        <activity android:name=".DetailsActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity android:name=".AddExpenseActivity">
+
+        </activity>
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login">

@@ -6,7 +6,7 @@
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.gianma.easyshare20.MainActivity">
+    tools:context=".MainActivity">
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/addExp"
