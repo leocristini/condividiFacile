@@ -73,7 +73,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private FirebaseAuth mAuth;
 
 
-    private final String requestIdToken = "330534537163-nva8rsq48pl40oadh90cjmqhhe6vetqs.apps.googleusercontent.com";
+    //private final String requestIdToken = "330534537163-nva8rsq48pl40oadh90cjmqhhe6vetqs.apps.googleusercontent.com";
 
     private UserLoginTask mAuthTask = null;
 
