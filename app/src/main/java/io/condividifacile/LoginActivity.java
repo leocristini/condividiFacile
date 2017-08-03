@@ -424,7 +424,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             GoogleSignInAccount acct = result.getSignInAccount();
             mStatusTextView.setText("ciao "+acct.getDisplayName());
 
-            Intent i = new Intent(this, MainActivity.class);
+            Intent i = new Intent(this, GroupActivity.class);
             startActivity(i);
 
 
