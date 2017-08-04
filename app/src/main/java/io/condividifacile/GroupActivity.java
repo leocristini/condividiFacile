@@ -3,6 +3,8 @@ package io.condividifacile;
 import android.animation.Animator;
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.Image;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -13,10 +15,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewAnimationUtils;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,6 +47,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 
 public class GroupActivity extends AppCompatActivity
@@ -53,6 +62,11 @@ public class GroupActivity extends AppCompatActivity
     private ArrayList<Integer> colors;
     //test data
     private String selectedGroup;
+    private String email;
+    private String name;
+    private String uid;
+    private Uri photoUrl;
+    private ArrayList<String> groups;
     private String [] xData = {"Alimenti","Bollette","Internet"};
     private float [] yData = {100,40,25};
 
@@ -62,7 +76,7 @@ public class GroupActivity extends AppCompatActivity
         setContentView(R.layout.activity_group);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        groups = new ArrayList<>();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -73,21 +87,36 @@ public class GroupActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        //navigation menu settings
+        NavigationView navView = (NavigationView) findViewById(R.id.nav_view);
+        View header = navView.getHeaderView(0);
+        final TextView nameView = (TextView) header.findViewById(R.id.nameView);
+        final TextView emailView = (TextView) header.findViewById(R.id.emailView);
+        final ImageView userImage = (ImageView) header.findViewById(R.id.userImageView);
+
+
+
         mAuth = FirebaseAuth.getInstance();
         //Getting user data and groups
         database = FirebaseDatabase.getInstance();
         currentUser = mAuth.getCurrentUser();
         if(currentUser != null) {
-            String name = currentUser.getDisplayName();
-            String email = currentUser.getEmail();
-            String uid = currentUser.getUid();
+            name = currentUser.getDisplayName();
+            nameView.setText(name);
+            email = currentUser.getEmail();
+            emailView.setText(email);
+            uid = currentUser.getUid();
+            photoUrl = currentUser.getPhotoUrl();
+            userImage.setImageURI(photoUrl);
             DatabaseReference groupsRef = database.getReference("users/" + uid + "/groups");
             groupsRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                         String group = singleSnapshot.getKey();
+                        groups.add(group);
                     }
+                    //TODO: Add groups to navigation menu
                 }
 
                 @Override
@@ -97,6 +126,8 @@ public class GroupActivity extends AppCompatActivity
             });
         }
 
+
+        //general layout settings
         final RelativeLayout revealLayout = (RelativeLayout) findViewById(R.id.transitionLayout);
         revealLayout.setVisibility(View.INVISIBLE);
         DisplayMetrics dm = getResources().getDisplayMetrics();
@@ -104,7 +135,6 @@ public class GroupActivity extends AppCompatActivity
         final FloatingActionButton expand_btn = (FloatingActionButton) findViewById(R.id.expandbtn);
         final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
         final TextView testView = (TextView) findViewById(R.id.textView);
-
         final boolean[] isExpanded = {false};
 
 
@@ -143,7 +173,6 @@ public class GroupActivity extends AppCompatActivity
                 detailsIntent.putExtra("categoria",pieE.getLabel());
                 detailsIntent.putExtra("totale",pieE.getValue());
                 detailsIntent.putExtra("color",colors.get(clickedIndex));
-                Log.i("(x,y)","x: "+h.getXPx()+" , "+"y: "+h.getYPx());
                 //animation
 
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
@@ -288,7 +317,7 @@ public class GroupActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.group, menu);
+        getMenuInflater().inflate(R.menu.activity_group_drawer, menu);
         return true;
     }
 
@@ -313,15 +342,7 @@ public class GroupActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
+        if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
 
