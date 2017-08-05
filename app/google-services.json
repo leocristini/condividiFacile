@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "485574892920-5ra0skpt4a828532cu06knajllfdcoks.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.condividifacile",
+            "certificate_hash": "83c2e1ca1fd4d049269ab6bc76bb35fe3c897a8c"
+          }
+        },
+        {
           "client_id": "485574892920-fq2gi95r58gtmcagmkll1cdm927v3alf.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,8 +37,13 @@
           "status": 1
         },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "485574892920-fq2gi95r58gtmcagmkll1cdm927v3alf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         },
         "ads_service": {
           "status": 2

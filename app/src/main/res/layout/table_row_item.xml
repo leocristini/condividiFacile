@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="?android:listPreferredItemHeight"
+    android:focusable="true"
+    android:clickable="true">
+
+    <TextView
+        android:id="@+id/cell1"
+        android:padding="3dp"
+        android:textAlignment="center"/>
+    <TextView
+        android:id="@+id/cell2"
+        android:padding="3dp"
+        android:textAlignment="center"/>
+    <TextView
+        android:id="@+id/cell3"
+        android:padding="3dp"
+        android:textAlignment="center"/>
+
+</TableRow>

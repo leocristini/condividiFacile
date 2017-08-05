@@ -73,7 +73,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private FirebaseAuth mAuth;
 
 
-    private final String requestIdToken = "330534537163-nva8rsq48pl40oadh90cjmqhhe6vetqs.apps.googleusercontent.com";
+    //private final String requestIdToken = "330534537163-nva8rsq48pl40oadh90cjmqhhe6vetqs.apps.googleusercontent.com";
 
     private UserLoginTask mAuthTask = null;
 
@@ -135,8 +135,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         });
 
         // Configure Google Sign In
+        // FIXED SignIn (gianma) by changing requestIdToken
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(requestIdToken)
+                .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
 
@@ -398,6 +399,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            Log.d("swag","got results here: "+result.getStatus());
+            Log.d("swag","got requestCode: "+requestCode);
             if (result.isSuccess()) {
                     // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = result.getSignInAccount();
@@ -409,7 +412,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     // [END_EXCLUDE]
             }
 
-            //result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             handleSignInResult(result);
         }
     }
@@ -421,7 +424,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             GoogleSignInAccount acct = result.getSignInAccount();
             mStatusTextView.setText("ciao "+acct.getDisplayName());
 
-            Intent i = new Intent(this, MainActivity.class);
+            Intent i = new Intent(this, GroupActivity.class);
             startActivity(i);
 
 
