@@ -14,6 +14,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -43,7 +44,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class GroupActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -55,8 +59,8 @@ public class GroupActivity extends AppCompatActivity
     private ExpandOrCollapse mAnimationManager;
     private ArrayList<Integer> colors;
     private PieChart pieChart;
-    //test data
     private String selectedGroup;
+    private ArrayList <Expense> expenses;
     private String email;
     private String name;
     private String uid;
@@ -112,6 +116,7 @@ public class GroupActivity extends AppCompatActivity
                         groups.add(group);
                         groupsMenu.add(Menu.NONE,groups.indexOf(group),Menu.NONE,group);
                     }
+
                 }
 
                 @Override
@@ -122,12 +127,13 @@ public class GroupActivity extends AppCompatActivity
         }
 
         //test data
+        /*
         ArrayList<PieEntry>entries = new ArrayList<>();
         entries.add(new PieEntry(100,"Alimenti"));
         entries.add(new PieEntry(40,"Bollette"));
         entries.add(new PieEntry(25,"Internet"));
         updateChart(entries);
-
+        */
         //From here on is the expandableLayout on the bottom
         final FloatingActionButton expand_btn = (FloatingActionButton) findViewById(R.id.expandbtn);
         final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
@@ -215,7 +221,11 @@ public class GroupActivity extends AppCompatActivity
 
         } else {
             selectedGroup = groups.get(id);
-            ArrayList <Expense> exps = getGroupExpenses(selectedGroup);
+            try {
+                getGroupExpenses(selectedGroup);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
 
         }
 
@@ -226,9 +236,9 @@ public class GroupActivity extends AppCompatActivity
 
 
     //method to get group expenses from DB
-    private ArrayList <Expense> getGroupExpenses(String groupName){
+    private void getGroupExpenses(String groupName) throws java.text.ParseException{
 
-        final ArrayList <Expense> expenses = new ArrayList<>();
+        expenses = new ArrayList<>();
         DatabaseReference expRef = database.getReference("groups/"+groupName+"/expenses");
         expRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -244,6 +254,14 @@ public class GroupActivity extends AppCompatActivity
                     exp.setBuyer(buyer);
                     String category = (String) singleSnapshot.child("category").getValue();
                     exp.setCategory(category);
+                    String date = (String) singleSnapshot.child("date").getValue();
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                    try {
+                        String formattedDate = dateFormat.format(dateFormat.parse(date));
+                        exp.setDate(formattedDate);
+                    } catch (java.text.ParseException e){
+                        e.printStackTrace();
+                    }
                     //Missing date, description and photo on DB
                     expenses.add(exp);
                 }
@@ -262,7 +280,6 @@ public class GroupActivity extends AppCompatActivity
             }
         });
 
-        return expenses;
     }
 
 
@@ -284,8 +301,27 @@ public class GroupActivity extends AppCompatActivity
         pieChart.setTransparentCircleRadius(10);
         pieChart.setHoleColor(Color.TRANSPARENT);
 
-        //chart value selected listener
+        //Setting colors to chart
+        colors = new ArrayList<>();
 
+        for (int c : ColorTemplate.VORDIPLOM_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.JOYFUL_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.COLORFUL_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.LIBERTY_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.PASTEL_COLORS)
+            colors.add(c);
+
+        colors.add(ColorTemplate.getHoloBlue());
+
+        //chart value selected listener
         pieChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
 
             public void onValueSelected(Entry e, Highlight h) {
@@ -297,17 +333,17 @@ public class GroupActivity extends AppCompatActivity
                 PieEntry pieE = (PieEntry) e;
                 int clickedIndex = 0;
                 for(int i = 0; i < entries.size(); i++){
-                    if(entries.get(i).equals(pieE.getLabel())){
+                    if(entries.get(i).getLabel().equals(pieE.getLabel())){
                         clickedIndex = i;
                     }
                 }
 
                 final Intent detailsIntent = new Intent(GroupActivity.this, DetailsActivity.class);
                 detailsIntent.putExtra("categoria",pieE.getLabel());
-                detailsIntent.putExtra("totale",pieE.getValue());
                 detailsIntent.putExtra("color",colors.get(clickedIndex));
-                //animation
+                detailsIntent.putExtra("expenses",expenses);
 
+                //animation
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                     revealLayout.setBackgroundColor(colors.get(clickedIndex));
                     revealLayout.setVisibility(View.VISIBLE);
@@ -354,6 +390,7 @@ public class GroupActivity extends AppCompatActivity
         PieDataSet dataSet = new PieDataSet(entries,"Categorie spese");
         dataSet.setSliceSpace(3);
         dataSet.setSelectionShift(5);
+        dataSet.setColors(colors);
 
         //Customizing legend
         Legend l = pieChart.getLegend();
@@ -361,26 +398,6 @@ public class GroupActivity extends AppCompatActivity
         l.setXEntrySpace(7);
         l.setYEntrySpace(5);
 
-        //Setting colors to chart
-        colors = new ArrayList<>();
-
-        for (int c : ColorTemplate.VORDIPLOM_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.JOYFUL_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.COLORFUL_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.LIBERTY_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.PASTEL_COLORS)
-            colors.add(c);
-
-        colors.add(ColorTemplate.getHoloBlue());
-        dataSet.setColors(colors);
 
         //instantiate pieData here
         PieData data = new PieData();
