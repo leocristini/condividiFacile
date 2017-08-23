@@ -49,23 +49,7 @@ public class DetailsActivity extends AppCompatActivity {
         });
 
         //creating test data
-        expenses = new ArrayList<>();
-
-        for(int i = 0; i < 100; i++){
-            Expense exp = new Expense();
-            exp.setId(i);
-            if(i < 60) {
-                exp.setCategory("Alimenti");
-            }else{
-                exp.setCategory("Bollette");
-            }
-            exp.setDescription("blablablablablablablablabla");
-            exp.setAmount(i*5);
-            exp.setBuyer("Gianmaria");
-            exp.setDate(new Timestamp(System.currentTimeMillis()));
-            exp.setPhotoPath(null);
-            expenses.add(exp);
-        }
+        expenses = (ArrayList<Expense>) getIntent().getExtras().getSerializable("expenses");
 
         addTableRows(expenses, categoria);
     }
@@ -79,13 +63,13 @@ public class DetailsActivity extends AppCompatActivity {
 
         for (int i = 0; i < exps.size(); i++) {
 
-            if(exps.get(i).getCategory().equals(category)) {
+            if(exps.get(i).getCategory().toLowerCase().equals(category.toLowerCase())) {
                 final TableRow row = (TableRow) getLayoutInflater().inflate(R.layout.table_row_item, null);
                 if(i%2 == 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
                     row.setBackground(getResources().getDrawable(R.drawable.row_background));
                 }
                 TextView tv1 = (TextView) row.findViewById(R.id.cell1);
-                tv1.setText(""+new SimpleDateFormat("dd/MM/yyyy").format(exps.get(i).getDate()));
+                tv1.setText(exps.get(i).getDate());
                 TextView tv2 = (TextView) row.findViewById(R.id.cell2);
                 tv2.setText(exps.get(i).getBuyer());
                 TextView tv3 = (TextView) row.findViewById(R.id.cell3);
@@ -108,9 +92,9 @@ public class DetailsActivity extends AppCompatActivity {
                 TextView amountView = (TextView) expandableLayout.findViewById(R.id.amountText);
                 amountView.setText(""+exps.get(i).getAmount());
                 TextView dateView = (TextView) expandableLayout.findViewById(R.id.dateText);
-                dateView.setText(""+new SimpleDateFormat("dd/MM/yyyy").format(exps.get(i).getDate()));
-                TextView descrView = (TextView) expandableLayout.findViewById(R.id.descrText);
-                descrView.setText(exps.get(i).getDescription());
+                dateView.setText(exps.get(i).getDate());
+                //TextView descrView = (TextView) expandableLayout.findViewById(R.id.descrText);
+                //descrView.setText(exps.get(i).getDescription());
                 final ImageView imageView = (ImageView) expandableLayout.findViewById(R.id.photoView);
                 if (exps.get(i).getPhotoPath() != null){
                     imageView.setImageResource(R.drawable.ic_block_black_24dp);

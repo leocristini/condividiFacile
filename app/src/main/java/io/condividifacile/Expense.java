@@ -1,18 +1,19 @@
 package io.condividifacile;
 
 import java.sql.Timestamp;
+import java.util.Date;
 
 /**
  * Created by gianma on 16/05/17.
  */
 
-public class Expense {
+public class Expense implements java.io.Serializable {
 
     private int id;
     private String category;
     private float amount;
     private String buyer;
-    private Timestamp date;
+    private String date;
     private String description;
     private String photoPath;
 
@@ -56,11 +57,11 @@ public class Expense {
         this.photoPath = photoPath;
     }
 
-    public Timestamp getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(Timestamp date) {
+    public void setDate(String date) {
         this.date = date;
     }
 

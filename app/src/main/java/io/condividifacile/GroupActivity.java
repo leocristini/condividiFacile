@@ -3,11 +3,11 @@ package io.condividifacile;
 import android.animation.Animator;
 import android.content.Intent;
 import android.graphics.Color;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.v4.util.Pair;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -15,15 +15,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewAnimationUtils;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,9 +44,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import org.w3c.dom.Text;
-
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class GroupActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -60,15 +58,14 @@ public class GroupActivity extends AppCompatActivity
     private FirebaseUser currentUser;
     private ExpandOrCollapse mAnimationManager;
     private ArrayList<Integer> colors;
-    //test data
+    private PieChart pieChart;
     private String selectedGroup;
+    private ArrayList <Expense> expenses;
     private String email;
     private String name;
     private String uid;
     private Uri photoUrl;
     private ArrayList<String> groups;
-    private String [] xData = {"Alimenti","Bollette","Internet"};
-    private float [] yData = {100,40,25};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +74,7 @@ public class GroupActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         groups = new ArrayList<>();
+        pieChart = (PieChart) findViewById(R.id.piechart);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -90,10 +88,11 @@ public class GroupActivity extends AppCompatActivity
         //navigation menu settings
         NavigationView navView = (NavigationView) findViewById(R.id.nav_view);
         View header = navView.getHeaderView(0);
+        final Menu navMenu = navView.getMenu();
+        final SubMenu groupsMenu = navMenu.addSubMenu("Groups");
         final TextView nameView = (TextView) header.findViewById(R.id.nameView);
         final TextView emailView = (TextView) header.findViewById(R.id.emailView);
         final ImageView userImage = (ImageView) header.findViewById(R.id.userImageView);
-
 
 
         mAuth = FirebaseAuth.getInstance();
@@ -115,8 +114,9 @@ public class GroupActivity extends AppCompatActivity
                     for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                         String group = singleSnapshot.getKey();
                         groups.add(group);
+                        groupsMenu.add(Menu.NONE,groups.indexOf(group),Menu.NONE,group);
                     }
-                    //TODO: Add groups to navigation menu
+
                 }
 
                 @Override
@@ -126,146 +126,19 @@ public class GroupActivity extends AppCompatActivity
             });
         }
 
-
-        //general layout settings
-        final RelativeLayout revealLayout = (RelativeLayout) findViewById(R.id.transitionLayout);
-        revealLayout.setVisibility(View.INVISIBLE);
-        DisplayMetrics dm = getResources().getDisplayMetrics();
-        final float maxRadius = Math.max(dm.heightPixels, dm.widthPixels);
+        //test data
+        /*
+        ArrayList<PieEntry>entries = new ArrayList<>();
+        entries.add(new PieEntry(100,"Alimenti"));
+        entries.add(new PieEntry(40,"Bollette"));
+        entries.add(new PieEntry(25,"Internet"));
+        updateChart(entries);
+        */
+        //From here on is the expandableLayout on the bottom
         final FloatingActionButton expand_btn = (FloatingActionButton) findViewById(R.id.expandbtn);
         final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
         final TextView testView = (TextView) findViewById(R.id.textView);
         final boolean[] isExpanded = {false};
-
-
-        final PieChart pieChart = (PieChart) findViewById(R.id.piechart);
-
-        //setting chart
-        pieChart.setUsePercentValues(true);
-        Description dscr = new Description();
-        dscr.setText("Spese recenti");
-        pieChart.setDescription(dscr);
-        pieChart.setDrawHoleEnabled(true);
-        pieChart.setHoleRadius(10);
-        pieChart.setTransparentCircleRadius(10);
-        pieChart.setHoleColor(Color.TRANSPARENT);
-
-        //chart value selected listener
-
-        pieChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
-
-            public void onValueSelected(Entry e, Highlight h) {
-                //display message on value selected
-                if(e==null){
-                    return;
-                }
-
-                PieEntry pieE = (PieEntry) e;
-                int clickedIndex = 0;
-                for(int i = 0; i < xData.length; i++){
-                    if(xData[i].equals(pieE.getLabel())){
-                        clickedIndex = i;
-                    }
-                }
-
-                Toast.makeText(GroupActivity.this, pieE.getLabel()+": "+pieE.getValue()+"€", Toast.LENGTH_SHORT).show();
-                final Intent detailsIntent = new Intent(GroupActivity.this, DetailsActivity.class);
-                detailsIntent.putExtra("categoria",pieE.getLabel());
-                detailsIntent.putExtra("totale",pieE.getValue());
-                detailsIntent.putExtra("color",colors.get(clickedIndex));
-                //animation
-
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    revealLayout.setBackgroundColor(colors.get(clickedIndex));
-                    revealLayout.setVisibility(View.VISIBLE);
-                    Animator circularReveal = ViewAnimationUtils.createCircularReveal(revealLayout, (int) h.getXPx(), (int) h.getYPx(), 0, maxRadius);
-
-                    circularReveal.setDuration(600);
-
-                    circularReveal.start();
-
-                    circularReveal.addListener(new Animator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            startActivity(detailsIntent);
-                        }
-
-                        @Override
-                        public void onAnimationCancel(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animator animation) {
-
-                        }
-                    });
-                }
-
-
-            }
-
-            @Override
-            public void onNothingSelected() {
-
-            }
-        });
-
-
-        //adding data to chart
-        ArrayList<PieEntry> values = new ArrayList<>();
-        for(int i = 0; i < yData.length; i++){
-            values.add(new PieEntry(yData[i],xData[i]));
-        }
-
-        PieDataSet dataSet = new PieDataSet(values,"Categorie spese");
-        dataSet.setSliceSpace(3);
-        dataSet.setSelectionShift(5);
-
-        //Customizing legend
-        Legend l = pieChart.getLegend();
-        l.setPosition(Legend.LegendPosition.ABOVE_CHART_LEFT);
-        l.setXEntrySpace(7);
-        l.setYEntrySpace(5);
-
-        //Setting colors to chart
-        colors = new ArrayList<>();
-
-        for (int c : ColorTemplate.VORDIPLOM_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.JOYFUL_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.COLORFUL_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.LIBERTY_COLORS)
-            colors.add(c);
-
-        for (int c : ColorTemplate.PASTEL_COLORS)
-            colors.add(c);
-
-        colors.add(ColorTemplate.getHoloBlue());
-        dataSet.setColors(colors);
-
-        //instantiate pieData here
-        PieData data = new PieData();
-        data.setDataSet(dataSet);
-        data.setValueFormatter(new PercentFormatter());
-        data.setValueTextColor(Color.GRAY);
-        data.setValueTextSize(11f);
-
-        pieChart.setData(data);
-        pieChart.highlightValues(null);
-        pieChart.invalidate();
-
-        //From here on is the expandableLayout on the bottom
         testView.setText("BALANCE: 12€");
         mAnimationManager = new ExpandOrCollapse();
 
@@ -346,10 +219,196 @@ public class GroupActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_send) {
 
+        } else {
+            selectedGroup = groups.get(id);
+            try {
+                getGroupExpenses(selectedGroup);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
+
+    //method to get group expenses from DB
+    private void getGroupExpenses(String groupName) throws java.text.ParseException{
+
+        expenses = new ArrayList<>();
+        DatabaseReference expRef = database.getReference("groups/"+groupName+"/expenses");
+        expRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int i = 0;
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
+                    i++;
+                    Expense exp = new Expense();
+                    exp.setId(i);
+                    long amount = (long) singleSnapshot.child("amount").getValue();
+                    exp.setAmount(amount);
+                    String buyer = (String) singleSnapshot.child("buyer").getValue();
+                    exp.setBuyer(buyer);
+                    String category = (String) singleSnapshot.child("category").getValue();
+                    exp.setCategory(category);
+                    String date = (String) singleSnapshot.child("date").getValue();
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                    try {
+                        String formattedDate = dateFormat.format(dateFormat.parse(date));
+                        exp.setDate(formattedDate);
+                    } catch (java.text.ParseException e){
+                        e.printStackTrace();
+                    }
+                    //Missing date, description and photo on DB
+                    expenses.add(exp);
+                }
+                ArrayList <PieEntry> entries = new ArrayList<>();
+                for(int j = 0; j < expenses.size(); j++){
+                    entries.add(new PieEntry(expenses.get(j).getAmount(),expenses.get(j).getCategory()));
+                }
+                updateChart(entries);
+
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
+
+    public void updateChart(final ArrayList<PieEntry> entries){
+
+        final RelativeLayout revealLayout = (RelativeLayout) findViewById(R.id.transitionLayout);
+        revealLayout.setVisibility(View.INVISIBLE);
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        final float maxRadius = Math.max(dm.heightPixels, dm.widthPixels);
+
+
+        //setting chart
+        pieChart.setUsePercentValues(true);
+        Description dscr = new Description();
+        dscr.setText("Spese recenti");
+        pieChart.setDescription(dscr);
+        pieChart.setDrawHoleEnabled(true);
+        pieChart.setHoleRadius(10);
+        pieChart.setTransparentCircleRadius(10);
+        pieChart.setHoleColor(Color.TRANSPARENT);
+
+        //Setting colors to chart
+        colors = new ArrayList<>();
+
+        for (int c : ColorTemplate.VORDIPLOM_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.JOYFUL_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.COLORFUL_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.LIBERTY_COLORS)
+            colors.add(c);
+
+        for (int c : ColorTemplate.PASTEL_COLORS)
+            colors.add(c);
+
+        colors.add(ColorTemplate.getHoloBlue());
+
+        //chart value selected listener
+        pieChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
+
+            public void onValueSelected(Entry e, Highlight h) {
+                //display message on value selected
+                if(e==null){
+                    return;
+                }
+
+                PieEntry pieE = (PieEntry) e;
+                int clickedIndex = 0;
+                for(int i = 0; i < entries.size(); i++){
+                    if(entries.get(i).getLabel().equals(pieE.getLabel())){
+                        clickedIndex = i;
+                    }
+                }
+
+                final Intent detailsIntent = new Intent(GroupActivity.this, DetailsActivity.class);
+                detailsIntent.putExtra("categoria",pieE.getLabel());
+                detailsIntent.putExtra("color",colors.get(clickedIndex));
+                detailsIntent.putExtra("expenses",expenses);
+
+                //animation
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                    revealLayout.setBackgroundColor(colors.get(clickedIndex));
+                    revealLayout.setVisibility(View.VISIBLE);
+                    Animator circularReveal = ViewAnimationUtils.createCircularReveal(revealLayout, (int) h.getXPx(), (int) h.getYPx(), 0, maxRadius);
+
+                    circularReveal.setDuration(600);
+
+                    circularReveal.start();
+
+                    circularReveal.addListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            startActivity(detailsIntent);
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animator animation) {
+
+                        }
+                    });
+                }
+
+
+            }
+
+            @Override
+            public void onNothingSelected() {
+
+            }
+        });
+
+
+
+        PieDataSet dataSet = new PieDataSet(entries,"Categorie spese");
+        dataSet.setSliceSpace(3);
+        dataSet.setSelectionShift(5);
+        dataSet.setColors(colors);
+
+        //Customizing legend
+        Legend l = pieChart.getLegend();
+        l.setPosition(Legend.LegendPosition.ABOVE_CHART_LEFT);
+        l.setXEntrySpace(7);
+        l.setYEntrySpace(5);
+
+
+        //instantiate pieData here
+        PieData data = new PieData();
+        data.setDataSet(dataSet);
+        data.setValueFormatter(new PercentFormatter());
+        data.setValueTextColor(Color.GRAY);
+        data.setValueTextSize(11f);
+
+        pieChart.setData(data);
+        pieChart.highlightValues(null);
+        pieChart.invalidate();
+    }
+
 }
