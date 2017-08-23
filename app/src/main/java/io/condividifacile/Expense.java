@@ -9,21 +9,12 @@ import java.util.Date;
 
 public class Expense implements java.io.Serializable {
 
-    private int id;
     private String category;
     private float amount;
     private String buyer;
     private String date;
     private String description;
     private String photoPath;
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public String getCategory() {
         return category;

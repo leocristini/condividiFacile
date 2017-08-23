@@ -126,14 +126,6 @@ public class GroupActivity extends AppCompatActivity
             });
         }
 
-        //test data
-        /*
-        ArrayList<PieEntry>entries = new ArrayList<>();
-        entries.add(new PieEntry(100,"Alimenti"));
-        entries.add(new PieEntry(40,"Bollette"));
-        entries.add(new PieEntry(25,"Internet"));
-        updateChart(entries);
-        */
         //From here on is the expandableLayout on the bottom
         final FloatingActionButton expand_btn = (FloatingActionButton) findViewById(R.id.expandbtn);
         final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
@@ -163,7 +155,7 @@ public class GroupActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 Intent addExpenseIntent = new Intent(GroupActivity.this,AddExpenseActivity.class);
-                //addExpenseIntent.putExtra("group",groupName);
+                addExpenseIntent.putExtra("selectedGroup",selectedGroup);
                 startActivity(addExpenseIntent);
             }
         });
@@ -174,6 +166,11 @@ public class GroupActivity extends AppCompatActivity
     protected void onResume() {
         RelativeLayout revealLayout = (RelativeLayout) findViewById(R.id.transitionLayout);
         revealLayout.setVisibility(View.INVISIBLE);
+        try {
+            getGroupExpenses(selectedGroup);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
         super.onResume();
     }
 
@@ -236,36 +233,43 @@ public class GroupActivity extends AppCompatActivity
 
 
     //method to get group expenses from DB
-    private void getGroupExpenses(String groupName) throws java.text.ParseException{
+    private void getGroupExpenses(final String groupName) throws java.text.ParseException{
 
         expenses = new ArrayList<>();
-        DatabaseReference expRef = database.getReference("groups/"+groupName+"/expenses");
+        DatabaseReference expRef = database.getReference("groups");
         expRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                int i = 0;
+                int categoriesCount = 0;
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
-                    i++;
-                    Expense exp = new Expense();
-                    exp.setId(i);
-                    long amount = (long) singleSnapshot.child("amount").getValue();
-                    exp.setAmount(amount);
-                    String buyer = (String) singleSnapshot.child("buyer").getValue();
-                    exp.setBuyer(buyer);
-                    String category = (String) singleSnapshot.child("category").getValue();
-                    exp.setCategory(category);
-                    String date = (String) singleSnapshot.child("date").getValue();
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                    try {
-                        String formattedDate = dateFormat.format(dateFormat.parse(date));
-                        exp.setDate(formattedDate);
-                    } catch (java.text.ParseException e){
-                        e.printStackTrace();
+                    //if (singleSnapshot.child("name").getValue().equals(groupName)){
+                     if(singleSnapshot.getKey().equals(groupName)){
+                        categoriesCount = (int) singleSnapshot.child("categories").getChildrenCount();
+
+                        for(DataSnapshot expense : singleSnapshot.child("expenses").getChildren()){
+                            Expense exp = new Expense();
+                            long amount = (long) expense.child("amount").getValue();
+                            exp.setAmount(amount);
+                            String buyer = (String) expense.child("buyer").getValue();
+                            exp.setBuyer(buyer);
+                            String category = (String) expense.child("category").getValue();
+                            exp.setCategory(category);
+                            String date = (String) expense.child("date").getValue();
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                            try {
+                                String formattedDate = dateFormat.format(dateFormat.parse(date));
+                                exp.setDate(formattedDate);
+                            } catch (java.text.ParseException e) {
+                                e.printStackTrace();
+                            }
+                            Log.d("swag",exp.toString());
+                            //Missing date, description and photo on DB
+                            expenses.add(exp);
+                        }
                     }
-                    //Missing date, description and photo on DB
-                    expenses.add(exp);
+
                 }
-                ArrayList <PieEntry> entries = new ArrayList<>();
+                ArrayList <PieEntry> entries = new ArrayList<>(categoriesCount);
                 for(int j = 0; j < expenses.size(); j++){
                     entries.add(new PieEntry(expenses.get(j).getAmount(),expenses.get(j).getCategory()));
                 }
