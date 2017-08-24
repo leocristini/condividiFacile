@@ -219,6 +219,11 @@ public class GroupActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_send) {
 
+        } else if (id == R.id.add_group){
+
+            Intent i = new Intent(GroupActivity.this, AddGroupActivity.class);
+            startActivity(i);
+
         } else {
             selectedGroup = groups.get(id);
             try {
@@ -245,25 +250,28 @@ public class GroupActivity extends AppCompatActivity
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int i = 0;
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
-                    i++;
-                    Expense exp = new Expense();
-                    exp.setId(i);
-                    long amount = (long) singleSnapshot.child("amount").getValue();
-                    exp.setAmount(amount);
-                    String buyer = (String) singleSnapshot.child("buyer").getValue();
-                    exp.setBuyer(buyer);
-                    String category = (String) singleSnapshot.child("category").getValue();
-                    exp.setCategory(category);
-                    String date = (String) singleSnapshot.child("date").getValue();
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                    try {
-                        String formattedDate = dateFormat.format(dateFormat.parse(date));
-                        exp.setDate(formattedDate);
-                    } catch (java.text.ParseException e){
-                        e.printStackTrace();
+                    if(singleSnapshot.getKey().equals("count")){}
+                    else {
+                        i++;
+                        Expense exp = new Expense();
+                        exp.setId(i);
+                        long amount = (long) singleSnapshot.child("amount").getValue();
+                        exp.setAmount(amount);
+                        String buyer = (String) singleSnapshot.child("buyer").getValue();
+                        exp.setBuyer(buyer);
+                        String category = (String) singleSnapshot.child("category").getValue();
+                        exp.setCategory(category);
+                        String date = (String) singleSnapshot.child("date").getValue();
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                        try {
+                            String formattedDate = dateFormat.format(dateFormat.parse(date));
+                            exp.setDate(formattedDate);
+                        } catch (java.text.ParseException e) {
+                            e.printStackTrace();
+                        }
+                        //Missing date, description and photo on DB
+                        expenses.add(exp);
                     }
-                    //Missing date, description and photo on DB
-                    expenses.add(exp);
                 }
                 ArrayList <PieEntry> entries = new ArrayList<>();
                 for(int j = 0; j < expenses.size(); j++){
@@ -410,5 +418,7 @@ public class GroupActivity extends AppCompatActivity
         pieChart.highlightValues(null);
         pieChart.invalidate();
     }
+
+
 
 }
