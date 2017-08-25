@@ -55,12 +55,10 @@
             android:layout_row="3"
             android:text="Category: " />
 
-        <Spinner
-            android:id="@+id/categorySpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <AutoCompleteTextView
+            android:id="@+id/categoryEdit"
             android:layout_column="2"
-            android:layout_gravity="right"
+            android:ems="5"
             android:layout_row="3" />
 
         <LinearLayout

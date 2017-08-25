@@ -76,16 +76,7 @@ public class DetailsActivity extends AppCompatActivity {
                 tv3.setText("" + exps.get(i).getAmount());
                 table.addView(row);
                 registerForContextMenu(row);
-/*
-                final RelativeLayout expandableLayout = new RelativeLayout(this);
-                expandableLayout.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,0));
-                expandableLayout.setBackgroundColor(Color.WHITE);
-                TextView buyer = new TextView(this);
-                buyer.setText(exps.get(i).getBuyer());
-                buyer.setPadding(2,2,2,2);
-                expandableLayout.addView(buyer);
-                table.addView(expandableLayout);
-*/
+
                 final GridLayout expandableLayout = (GridLayout) getLayoutInflater().inflate(R.layout.expandable_details, null);
                 TextView buyerView = (TextView) expandableLayout.findViewById(R.id.buyerText);
                 buyerView.setText(exps.get(i).getBuyer());
@@ -108,10 +99,10 @@ public class DetailsActivity extends AppCompatActivity {
 
                         if (!isExpanded[0]) {
                             expandableLayout.setVisibility(View.VISIBLE);
-                            mAnimationManager.expand(expandableLayout, 1000, 400);
+                            mAnimationManager.expand(expandableLayout, 500, 400);
                             isExpanded[0] = true;
                         }else{
-                            mAnimationManager.collapse(expandableLayout, 1000, 0);
+                            mAnimationManager.collapse(expandableLayout, 500, 0);
                             isExpanded[0] = false;
                         }
                     }

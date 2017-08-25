@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.util.Pair;
@@ -17,6 +18,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewAnimationUtils;
@@ -48,6 +50,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.StringTokenizer;
 
 public class GroupActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -89,7 +92,6 @@ public class GroupActivity extends AppCompatActivity
         NavigationView navView = (NavigationView) findViewById(R.id.nav_view);
         View header = navView.getHeaderView(0);
         final Menu navMenu = navView.getMenu();
-        final SubMenu groupsMenu = navMenu.addSubMenu("Groups");
         final TextView nameView = (TextView) header.findViewById(R.id.nameView);
         final TextView emailView = (TextView) header.findViewById(R.id.emailView);
         final ImageView userImage = (ImageView) header.findViewById(R.id.userImageView);
@@ -114,7 +116,7 @@ public class GroupActivity extends AppCompatActivity
                     for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                         String group = singleSnapshot.getKey();
                         groups.add(group);
-                        groupsMenu.add(Menu.NONE,groups.indexOf(group),Menu.NONE,group);
+                        navMenu.add(R.id.groups_menu,groups.indexOf(group),Menu.NONE,group);
                     }
 
                 }
@@ -139,16 +141,43 @@ public class GroupActivity extends AppCompatActivity
             public void onClick(View v) {
 
                 if (!isExpanded[0]) {
-                    mAnimationManager.expand(expandableLayout, 1000, 450);
+                    mAnimationManager.expand(expandableLayout, 500, 450);
                     isExpanded[0] = true;
                     expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
                 }else {
-                    mAnimationManager.collapse(expandableLayout, 1000, 200);
+                    mAnimationManager.collapse(expandableLayout, 500, 200);
                     isExpanded[0] = false;
                     expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_up_black_24dp);
                 }
             }
         });
+
+        /*
+        expandableLayout.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                int action = event.getAction();
+                switch (action){
+                    case (MotionEvent.ACTION_UP):
+                        if (!isExpanded[0]) {
+                            mAnimationManager.expand(expandableLayout, 1000, 450);
+                            isExpanded[0] = true;
+                            expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
+                            return true;
+                        }
+                    case (MotionEvent.ACTION_DOWN):
+                        if (isExpanded[0]) {
+                            mAnimationManager.collapse(expandableLayout, 500, 200);
+                            isExpanded[0] = false;
+                            expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_up_black_24dp);
+                            return true;
+                        }
+                    default:
+                            return false;
+                }
+            }
+        });
+        */
 
         final FloatingActionButton addExpBtn = (FloatingActionButton) findViewById(R.id.addExp);
         addExpBtn.setOnClickListener(new View.OnClickListener() {
@@ -241,11 +270,13 @@ public class GroupActivity extends AppCompatActivity
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int categoriesCount = 0;
+                ArrayList <String> categories = new ArrayList<String>();
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                     //if (singleSnapshot.child("name").getValue().equals(groupName)){
                      if(singleSnapshot.getKey().equals(groupName)){
-                        categoriesCount = (int) singleSnapshot.child("categories").getChildrenCount();
-
+                        for(DataSnapshot category : singleSnapshot.child("categories").getChildren()){
+                            categories.add(category.getKey());
+                        }
                         for(DataSnapshot expense : singleSnapshot.child("expenses").getChildren()){
                             Expense exp = new Expense();
                             long amount = (long) expense.child("amount").getValue();
@@ -255,14 +286,7 @@ public class GroupActivity extends AppCompatActivity
                             String category = (String) expense.child("category").getValue();
                             exp.setCategory(category);
                             String date = (String) expense.child("date").getValue();
-                            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                            try {
-                                String formattedDate = dateFormat.format(dateFormat.parse(date));
-                                exp.setDate(formattedDate);
-                            } catch (java.text.ParseException e) {
-                                e.printStackTrace();
-                            }
-                            Log.d("swag",exp.toString());
+                            exp.setDate(date);
                             //Missing date, description and photo on DB
                             expenses.add(exp);
                         }
@@ -270,8 +294,15 @@ public class GroupActivity extends AppCompatActivity
 
                 }
                 ArrayList <PieEntry> entries = new ArrayList<>(categoriesCount);
-                for(int j = 0; j < expenses.size(); j++){
-                    entries.add(new PieEntry(expenses.get(j).getAmount(),expenses.get(j).getCategory()));
+                for(int j = 0; j < categories.size(); j++){
+                    float sum = 0;
+                    for (int i = 0; i < expenses.size(); i++){
+                        if(categories.get(j).equals(expenses.get(i).getCategory())){
+                            sum = sum+expenses.get(i).getAmount();
+                        }
+                    }
+                    PieEntry e = new PieEntry(sum,categories.get(j));
+                    entries.add(e);
                 }
                 updateChart(entries);
 

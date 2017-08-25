@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -66,9 +67,10 @@ public class AddExpenseActivity extends AppCompatActivity {
         //Getting group categories
         final ArrayList<String> categories = new ArrayList<>();
         final DatabaseReference categoriesRef = database.getReference("groups/"+selectedGroup+"/categories");
-        final Spinner categorySpinner = (Spinner) findViewById(R.id.categorySpinner);
+        final AutoCompleteTextView categoryEdit = (AutoCompleteTextView) findViewById(R.id.categoryEdit);
         final ArrayAdapter<String> categoryAdapter = new ArrayAdapter<String>(AddExpenseActivity.this,android.R.layout.simple_spinner_dropdown_item,categories);
-        categorySpinner.setAdapter(categoryAdapter);
+        categoryEdit.setThreshold(0);
+        categoryEdit.setAdapter(categoryAdapter);
         categoriesRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -81,18 +83,6 @@ public class AddExpenseActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectedCategory = categories.get(position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
 
             }
         });
@@ -110,8 +100,12 @@ public class AddExpenseActivity extends AppCompatActivity {
 
                 final DatabaseReference expenseRef = database.getReference("groups/"+selectedGroup+"/expenses");
                 float amount = Float.parseFloat(amountText.getText().toString());
+                String category = categoryEdit.getText().toString();
                 Expense exp = new Expense();
-                exp.setCategory(selectedCategory);
+                exp.setCategory(category);
+                if (!categories.contains(category)){
+                    expenseRef.getParent().child("categories").child(category).setValue(true);
+                }
                 exp.setBuyer(name);
                 exp.setDate(formattedDate);
                 exp.setAmount(amount);

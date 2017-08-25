@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="?attr/actionBarSize"
-    tools:context=".MainActivity">
+    tools:context=".GroupActivity">
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/addExp"
@@ -71,6 +71,7 @@
         android:id="@+id/transitionLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:elevation="50dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
