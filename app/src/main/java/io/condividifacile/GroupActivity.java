@@ -23,7 +23,9 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -142,6 +144,9 @@ public class GroupActivity extends AppCompatActivity
                     mAnimationManager.expand(expandableLayout, 500, 450);
                     isExpanded[0] = true;
                     expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
+                    if(selectedGroup != null){
+                        detailsBalance();
+                    }
                 }else {
                     mAnimationManager.collapse(expandableLayout, 500, 200);
                     isExpanded[0] = false;
@@ -307,6 +312,18 @@ public class GroupActivity extends AppCompatActivity
     //method to show user balance details
     private void detailsBalance(){
         final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
+        expandableLayout.removeAllViews();
+        ListView membersBalanceList = new ListView(this);
+
+        ArrayList<String> membersBalance = new ArrayList<>();
+
+        for(int i = 0; i < userBalance.size(); i++){
+            membersBalance.add(userBalance.get(i).first+": "+userBalance.get(i).second);
+        }
+
+        ArrayAdapter<String> balanceAdapter = new ArrayAdapter<String>(GroupActivity.this, android.R.layout.simple_list_item_1,membersBalance);
+        membersBalanceList.setAdapter(balanceAdapter);
+        expandableLayout.addView(membersBalanceList);
 
     }
 
