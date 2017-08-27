@@ -49,11 +49,22 @@
         android:background="?attr/colorButtonNormal">
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/totalBalance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_margin="40dp" />
+            android:layout_margin="40dp"
+            android:gravity="center"
+            android:visibility="invisible"/>
+
+        <TableLayout
+            android:id="@+id/balanceTable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:stretchColumns="*"
+            android:visibility="invisible">
+
+        </TableLayout>
 
     </RelativeLayout>
 

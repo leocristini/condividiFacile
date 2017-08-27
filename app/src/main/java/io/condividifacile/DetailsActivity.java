@@ -63,7 +63,7 @@ public class DetailsActivity extends AppCompatActivity {
 
         for (int i = 0; i < exps.size(); i++) {
 
-            if(exps.get(i).getCategory().toLowerCase().equals(category.toLowerCase())) {
+            if(exps.get(i).getCategory().equalsIgnoreCase(category)) {
                 final TableRow row = (TableRow) getLayoutInflater().inflate(R.layout.table_row_item, null);
                 if(i%2 == 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
                     row.setBackground(getResources().getDrawable(R.drawable.row_background));

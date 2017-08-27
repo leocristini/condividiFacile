@@ -14,6 +14,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Layout;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
@@ -27,6 +28,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -298,32 +301,35 @@ public class GroupActivity extends AppCompatActivity
         }
 
         final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
-        expandableLayout.removeAllViews();
+        TableLayout table = (TableLayout) expandableLayout.findViewById(R.id.balanceTable);
+        table.setVisibility(View.INVISIBLE);
+        TextView totalBalance = (TextView) findViewById(R.id.totalBalance);
+        totalBalance.setVisibility(View.VISIBLE);
 
-        TextView totalBalance = new TextView(this);
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.setMargins(40,40,40,40);
-        totalBalance.setLayoutParams(params);
         totalBalance.setText("Total balance: "+balanceSum);
 
-        expandableLayout.addView(totalBalance);
     }
 
     //method to show user balance details
     private void detailsBalance(){
-        final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
-        expandableLayout.removeAllViews();
-        ListView membersBalanceList = new ListView(this);
 
-        ArrayList<String> membersBalance = new ArrayList<>();
+        final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
+        TextView totalBalance = (TextView) findViewById(R.id.totalBalance);
+        totalBalance.setVisibility(View.INVISIBLE);
+        TableLayout balanceTable = (TableLayout) expandableLayout.findViewById(R.id.balanceTable);
+        balanceTable.removeAllViews();
+        balanceTable.setVisibility(View.VISIBLE);
 
         for(int i = 0; i < userBalance.size(); i++){
-            membersBalance.add(userBalance.get(i).first+": "+userBalance.get(i).second);
-        }
+            final TableRow row = (TableRow) getLayoutInflater().inflate(R.layout.balance_row_item, null);
+            TextView member = (TextView) row.findViewById(R.id.member);
+            member.setText(userBalance.get(i).first);
+            TextView balance = (TextView) row.findViewById(R.id.balance);
+            balance.setText(userBalance.get(i).second.toString());
 
-        ArrayAdapter<String> balanceAdapter = new ArrayAdapter<String>(GroupActivity.this, android.R.layout.simple_list_item_1,membersBalance);
-        membersBalanceList.setAdapter(balanceAdapter);
-        expandableLayout.addView(membersBalanceList);
+            balanceTable.addView(row);
+            registerForContextMenu(row);
+        }
 
     }
 
