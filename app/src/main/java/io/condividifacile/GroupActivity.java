@@ -256,6 +256,11 @@ public class GroupActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_send) {
 
+        } else if (id == R.id.add_group){
+
+            Intent i = new Intent(GroupActivity.this, AddGroupActivity.class);
+            startActivity(i);
+
         } else {
             selectedGroup = groups.get(id);
             getGroupExpenses(selectedGroup);
@@ -365,6 +370,7 @@ public class GroupActivity extends AppCompatActivity
                             expenses.add(exp);
                         }
                     }
+
 
                 }
                 ArrayList <PieEntry> entries = new ArrayList<>(categoriesCount);
@@ -519,5 +525,7 @@ public class GroupActivity extends AppCompatActivity
             pieChart.invalidate();
         }
     }
+
+
 
 }
