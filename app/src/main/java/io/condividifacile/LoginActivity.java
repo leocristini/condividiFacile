@@ -155,7 +155,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        updateUI(false);
+        boolean tmp = currentUser!=null;
+        if(tmp){
+            Intent i = new Intent(this, GroupActivity.class);
+            startActivity(i);
+        }
+        updateUI(tmp);
     }
 
 
@@ -405,6 +410,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = result.getSignInAccount();
                 firebaseAuthWithGoogle(account);
+                Log.i("swag","successful logged");
             } else {
                 // Google Sign In failed, update UI appropriately
                 // [START_EXCLUDE]
