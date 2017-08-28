@@ -1,18 +1,14 @@
 package io.condividifacile;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.GridLayout;
-import android.widget.GridLayout.Spec;
+import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -22,35 +18,38 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class AddExpenseActivity extends AppCompatActivity {
 
-    private String [] xData = {"Alimenti","Bollette","Internet"};
+    private String selectedCategory;
+    private String name;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_expense);
 
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        final String selectedGroup = getIntent().getExtras().getString("selectedGroup");
 
-        //fake data
-        final ArrayList <String> groups = new ArrayList<>();
-        final ArrayAdapter<String> groupsAdapter = new ArrayAdapter<String>(AddExpenseActivity.this,android.R.layout.simple_spinner_dropdown_item,groups);
+        //Getting group members
+        final ArrayList <String> members = new ArrayList<>();
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            String name = user.getDisplayName();
+            name = user.getDisplayName();
             String email = user.getEmail();
             String uid = user.getUid();
-            DatabaseReference groupsRef = database.getReference("users/"+uid+"/groups");
+            DatabaseReference groupsRef = database.getReference("groups/"+selectedGroup+"/members");
             groupsRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
-                        String group = singleSnapshot.getKey();
-                        groups.add(group);
-                        Log.d("swag1","group: "+groups);
-                        groupsAdapter.notifyDataSetChanged();
+                        String member = singleSnapshot.getKey();
+                        members.add(member);
+                        addMemberBox(member);
                     }
                 }
 
@@ -61,42 +60,55 @@ public class AddExpenseActivity extends AppCompatActivity {
             });
         }
 
-        final Spinner groupSpinner = (Spinner) findViewById(R.id.groupSpinner);
-        groupSpinner.setAdapter(groupsAdapter);
-        groupSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        //Getting group categories
+        final ArrayList<String> categories = new ArrayList<>();
+        final DatabaseReference categoriesRef = database.getReference("groups/"+selectedGroup+"/categories");
+        final AutoCompleteTextView categoryEdit = (AutoCompleteTextView) findViewById(R.id.categoryEdit);
+        final ArrayAdapter<String> categoryAdapter = new ArrayAdapter<String>(AddExpenseActivity.this,android.R.layout.simple_spinner_dropdown_item,categories);
+        categoryEdit.setThreshold(0);
+        categoryEdit.setAdapter(categoryAdapter);
+        categoriesRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-                final LinearLayout boxesLayout = (LinearLayout) findViewById(R.id.boxes_layout);
-                boxesLayout.removeAllViews();
-                Log.d("swag","clicked item: "+position);
-                DatabaseReference myRef = database.getReference("groups/"+groups.get(position)+"/members");
-                myRef.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
-                            String member = singleSnapshot.getKey();
-                            Log.d("swag","member: "+member);
-                            addMemberBox(member);
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
-
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
+                    String category = singleSnapshot.getKey();
+                    categories.add(category);
+                    categoryAdapter.notifyDataSetChanged();
+                }
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+            public void onCancelled(DatabaseError databaseError) {
 
             }
         });
-        final Spinner categorySpinner = (Spinner) findViewById(R.id.categorySpinner);
-        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<String>(AddExpenseActivity.this,android.R.layout.simple_spinner_dropdown_item,xData);
-        categorySpinner.setAdapter(categoryAdapter);
+
+        final EditText amountText = (EditText) findViewById(R.id.amountEdit);
+
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
+        final String formattedDate = df.format(c.getTime());
+
+        Button completeBtn = (Button) findViewById(R.id.completeExp);
+        completeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                final DatabaseReference expenseRef = database.getReference("groups/"+selectedGroup+"/expenses");
+                float amount = Float.parseFloat(amountText.getText().toString());
+                String category = categoryEdit.getText().toString();
+                Expense exp = new Expense();
+                exp.setCategory(category);
+                if (!categories.contains(category)){
+                    expenseRef.getParent().child("categories").child(category).setValue(true);
+                }
+                exp.setBuyer(name);
+                exp.setDate(formattedDate);
+                exp.setAmount(amount);
+                expenseRef.push().setValue(exp);
+                finish();
+            }
+        });
 
     }
 

@@ -2,6 +2,7 @@ package io.condividifacile;
 
 import android.animation.ValueAnimator;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 
@@ -21,7 +22,7 @@ public class ExpandOrCollapse {
                 v.requestLayout();
             }
         });
-        valueAnimator.setInterpolator(new BounceInterpolator());
+        valueAnimator.setInterpolator(new AccelerateInterpolator());
         valueAnimator.setDuration(duration);
         valueAnimator.start();
     }
@@ -37,7 +38,7 @@ public class ExpandOrCollapse {
                 v.requestLayout();
             }
         });
-        valueAnimator.setInterpolator(new BounceInterpolator());
+        valueAnimator.setInterpolator(new AccelerateInterpolator());
         valueAnimator.setDuration(duration);
         valueAnimator.start();
     }

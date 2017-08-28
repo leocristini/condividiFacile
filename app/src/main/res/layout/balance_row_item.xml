@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:focusable="true"
+    android:clickable="true">
+
+    <TextView
+        android:id="@+id/member"
+        android:padding="3dp"
+        android:textAlignment="center"/>
+    <TextView
+        android:id="@+id/balance"
+        android:padding="3dp"
+        android:textAlignment="center"/>
+
+    <Button
+        android:id="@+id/settleBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Settle up"/>
+
+</TableRow>
