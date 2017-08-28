@@ -282,7 +282,7 @@ public class GroupActivity extends AppCompatActivity
 
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                     String member = singleSnapshot.getKey();
-                    double balance = (double) singleSnapshot.getValue();
+                    double balance = Double.parseDouble(""+singleSnapshot.getValue());
                     Pair<String, Double> memberBalance = new Pair<String, Double>(member,balance);
                     userBalance.add(memberBalance);
                     shortBalance();
@@ -350,7 +350,7 @@ public class GroupActivity extends AppCompatActivity
                 ArrayList <String> categories = new ArrayList<String>();
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                     //if (singleSnapshot.child("name").getValue().equals(groupName)){
-                     if(singleSnapshot.getKey().equals(groupName)){
+                    if(singleSnapshot.getKey().equals(groupName)){
                         for(DataSnapshot category : singleSnapshot.child("categories").getChildren()){
                             categories.add(category.getKey());
                         }

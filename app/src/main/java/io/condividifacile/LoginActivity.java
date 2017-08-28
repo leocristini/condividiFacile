@@ -46,6 +46,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -189,6 +191,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             // Sign in success, update UI with the signed-in user's information
                             Log.d("swag", "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
+
+                            //aggiunta utente al db
+                            FirebaseDatabase database;
+                            database = FirebaseDatabase.getInstance();
+                            DatabaseReference databaseReference = database.getReference("users");
+                            databaseReference.child(user.getUid());
+
+                                User utente = new User(user.getDisplayName(),user.getEmail(),null,0);
+
+                                databaseReference.child(user.getUid()).setValue(utente);
+
                             updateUI(true);
                         } else {
                             // If sign in fails, display a message to the user.
@@ -429,6 +442,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
             mStatusTextView.setText("ciao "+acct.getDisplayName());
+
+
 
             Intent i = new Intent(this, GroupActivity.class);
             startActivity(i);

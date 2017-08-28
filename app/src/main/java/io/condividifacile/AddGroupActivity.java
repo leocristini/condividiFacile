@@ -80,7 +80,7 @@ public class AddGroupActivity extends AppCompatActivity {
 
         Group newGroup = new Group(groupName,usersString,spese,categorie);
 
-
+        //TODO sistema l' aggiunta del gruppo nel database (togli la chiave iniziale)
 
         DatabaseReference dbReference = database.getReference("groups");
         dbReference.push().setValue(newGroup);
