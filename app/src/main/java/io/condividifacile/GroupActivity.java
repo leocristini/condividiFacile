@@ -103,6 +103,7 @@ public class GroupActivity extends AppCompatActivity
 
 
         mAuth = FirebaseAuth.getInstance();
+
         //Getting user data and groups
         database = FirebaseDatabase.getInstance();
         currentUser = mAuth.getCurrentUser();
@@ -194,6 +195,7 @@ public class GroupActivity extends AppCompatActivity
             public void onClick(View v) {
                 Intent addExpenseIntent = new Intent(GroupActivity.this,AddExpenseActivity.class);
                 addExpenseIntent.putExtra("selectedGroup",selectedGroup);
+                addExpenseIntent.putExtra("userBalance",userBalance);
                 startActivity(addExpenseIntent);
             }
         });

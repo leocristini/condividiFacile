@@ -1,6 +1,9 @@
 package io.condividifacile;
 
+import android.util.Pair;
+
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -15,6 +18,7 @@ public class Expense implements java.io.Serializable {
     private String date;
     private String description;
     private String photoPath;
+    private ArrayList<Pair<String,Double>> division;
 
     public String getCategory() {
         return category;
@@ -62,5 +66,13 @@ public class Expense implements java.io.Serializable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public ArrayList<Pair<String, Double>> getDivision() {
+        return division;
+    }
+
+    public void setDivision(ArrayList<Pair<String, Double>> division) {
+        this.division = division;
     }
 }

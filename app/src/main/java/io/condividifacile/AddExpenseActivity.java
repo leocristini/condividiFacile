@@ -1,7 +1,9 @@
 package io.condividifacile;
 
 import android.os.Bundle;
+import android.util.Pair;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -24,8 +26,9 @@ import java.util.Calendar;
 
 public class AddExpenseActivity extends AppCompatActivity {
 
-    private String selectedCategory;
     private String name;
+    private ArrayList <Pair<String,String>> members;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,10 +37,11 @@ public class AddExpenseActivity extends AppCompatActivity {
 
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         final String selectedGroup = getIntent().getExtras().getString("selectedGroup");
+        final ArrayList<Pair<String,Double>> userBalance = (ArrayList<Pair<String,Double>>) getIntent().getSerializableExtra("userBalance");
 
         //Getting group members
-        final ArrayList <String> members = new ArrayList<>();
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        members = new ArrayList<>();
+        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             name = user.getDisplayName();
             String email = user.getEmail();
@@ -48,7 +52,8 @@ public class AddExpenseActivity extends AppCompatActivity {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                         String member = singleSnapshot.getKey();
-                        members.add(member);
+                        String email = (String) singleSnapshot.getValue();
+                        members.add(new Pair<String, String>(member,email));
                         addMemberBox(member);
                     }
                 }
@@ -83,6 +88,7 @@ public class AddExpenseActivity extends AppCompatActivity {
             }
         });
 
+
         final EditText amountText = (EditText) findViewById(R.id.amountEdit);
 
         Calendar c = Calendar.getInstance();
@@ -94,7 +100,7 @@ public class AddExpenseActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                final DatabaseReference expenseRef = database.getReference("groups/"+selectedGroup+"/expenses");
+                DatabaseReference expenseRef = database.getReference("groups/"+selectedGroup+"/expenses");
                 float amount = Float.parseFloat(amountText.getText().toString());
                 String category = categoryEdit.getText().toString();
                 Expense exp = new Expense();
@@ -105,7 +111,33 @@ public class AddExpenseActivity extends AppCompatActivity {
                 exp.setBuyer(name);
                 exp.setDate(formattedDate);
                 exp.setAmount(amount);
+
+                LinearLayout boxesLayout = (LinearLayout) findViewById(R.id.boxes_layout);
+                int n_boxes = boxesLayout.getChildCount();
+                final ArrayList <String> selectedMembers = new ArrayList<String>();
+                for(int i = 0; i < n_boxes; i++) {
+                    CheckBox memberBox = (CheckBox) boxesLayout.getChildAt(i);
+                    if(memberBox.isChecked()){
+                        selectedMembers.add(memberBox.getText().toString());
+                    }
+                }
+
+                final ArrayList<Pair<String,Double>> divisions = divideEqually(amount,selectedMembers);
+
+                //Debug
+                for(int i = 0; i < divisions.size(); i++){
+                    if(!divisions.get(i).first.equalsIgnoreCase(user.getDisplayName())) {
+                        Log.d("swag", "To " + divisions.get(i).first + ": " + divisions.get(i).second);
+                    }else{
+                        Log.d("swag", "To " + divisions.get(i).first + ": " + divisions.get(i).second);
+                    }
+                }
+
+                exp.setDivision(divisions);
                 expenseRef.push().setValue(exp);
+
+                //TODO: update user balance
+
                 finish();
             }
         });
@@ -115,8 +147,24 @@ public class AddExpenseActivity extends AppCompatActivity {
     private void addMemberBox(String member){
         final LinearLayout boxesLayout = (LinearLayout) findViewById(R.id.boxes_layout);
         CheckBox box = new CheckBox(this);
+        box.setId(members.indexOf(member));
         box.setText(member);
         box.setChecked(true);
         boxesLayout.addView(box);
+    }
+
+    // returns an ArrayList<Double> with the total divided in equal amounts as by the divider parameter
+    public ArrayList<Pair<String,Double>> divideEqually(double total, ArrayList<String> members)
+    {
+        ArrayList<Pair<String,Double>> membersBalance = new ArrayList<>();
+        int divider = members.size();
+        for(int i = 0; i < members.size(); i++) {
+            double amount = Math.round((total / divider) * 100.0) / 100.0;
+            membersBalance.add(new Pair<String, Double>(members.get(i),amount));
+            total -= amount;
+            divider--;
+        }
+
+        return membersBalance;
     }
 }
