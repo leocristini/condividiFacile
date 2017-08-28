@@ -74,6 +74,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private FirebaseAuth mAuth;
 
+    private FirebaseUser currentUser;
+
 
     //private final String requestIdToken = "330534537163-nva8rsq48pl40oadh90cjmqhhe6vetqs.apps.googleusercontent.com";
 
@@ -191,17 +193,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             // Sign in success, update UI with the signed-in user's information
                             Log.d("swag", "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-
-                            //aggiunta utente al db
-                            FirebaseDatabase database;
-                            database = FirebaseDatabase.getInstance();
-                            DatabaseReference databaseReference = database.getReference("users");
-                            databaseReference.child(user.getUid());
-
-                                User utente = new User(user.getDisplayName(),user.getEmail(),null,0);
-
-                                databaseReference.child(user.getUid()).setValue(utente);
-
+                            Log.d("swag","user state "+user);
                             updateUI(true);
                         } else {
                             // If sign in fails, display a message to the user.
@@ -421,9 +413,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             Log.d("swag","got requestCode: "+requestCode);
             if (result.isSuccess()) {
                     // Google Sign In was successful, authenticate with Firebase
+
                 GoogleSignInAccount account = result.getSignInAccount();
                 firebaseAuthWithGoogle(account);
                 Log.i("swag","successful logged");
+
+
+
             } else {
                 // Google Sign In failed, update UI appropriately
                 // [START_EXCLUDE]
@@ -443,7 +439,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             GoogleSignInAccount acct = result.getSignInAccount();
             mStatusTextView.setText("ciao "+acct.getDisplayName());
 
-
+            //aggiunta utente al db
+            //mAuth = FirebaseAuth.getInstance();
+            //currentUser = acct;
+            if(mAuth.getCurrentUser()==null)
+                Log.d("swag","utente nullo db");
+            FirebaseDatabase database;
+            database = FirebaseDatabase.getInstance();
+            DatabaseReference databaseReference = database.getReference("users");
+            //TODO fix la chiave utente
+            User utente = new User(acct.getDisplayName(),acct.getEmail(),null,0);
+            databaseReference.child(acct.getId()).setValue(utente);
 
             Intent i = new Intent(this, GroupActivity.class);
             startActivity(i);
