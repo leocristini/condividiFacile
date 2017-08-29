@@ -28,32 +28,30 @@ public class AddExpenseActivity extends AppCompatActivity {
 
     private String name;
     private ArrayList <Pair<String,String>> members;
-
+    private ArrayList<Pair<String,Double>> userBalance;
+    private FirebaseDatabase database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_expense);
 
-        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        database = FirebaseDatabase.getInstance();
         final String selectedGroup = getIntent().getExtras().getString("selectedGroup");
-        final ArrayList<Pair<String,Double>> userBalance = (ArrayList<Pair<String,Double>>) getIntent().getSerializableExtra("userBalance");
 
         //Getting group members
         members = new ArrayList<>();
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             name = user.getDisplayName();
-            String email = user.getEmail();
-            String uid = user.getUid();
             DatabaseReference groupsRef = database.getReference("groups/"+selectedGroup+"/members");
             groupsRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                         String member = singleSnapshot.getKey();
-                        String email = (String) singleSnapshot.getValue();
-                        members.add(new Pair<String, String>(member,email));
+                        String id = (String) singleSnapshot.getValue();
+                        members.add(new Pair<String, String>(member,id));
                         addMemberBox(member);
                     }
                 }
@@ -64,6 +62,9 @@ public class AddExpenseActivity extends AppCompatActivity {
                 }
             });
         }
+
+        //Getting user balance
+        getUserBalance(user.getUid(),selectedGroup);
 
         //Getting group categories
         final ArrayList<String> categories = new ArrayList<>();
@@ -137,6 +138,37 @@ public class AddExpenseActivity extends AppCompatActivity {
                 expenseRef.push().setValue(exp);
 
                 //TODO: update user balance
+                final ArrayList<Pair<String,Double>> newUserBalance = new ArrayList<Pair<String, Double>>();
+                for(int i = 0; i < userBalance.size(); i++){
+                    for(int j = 0; j < divisions.size(); j++){
+                        if(userBalance.get(i).first.equals(divisions.get(j).first)){
+                            double oldBalance = userBalance.get(i).second;
+                            double newBalance = Math.round((oldBalance + divisions.get(j).second)*100.0)/100.0;
+                            Log.d("swag","Old balance for "+userBalance.get(i).first+" was "+oldBalance+", new balance is "+newBalance);
+                            newUserBalance.add(new Pair<String, Double>(divisions.get(j).first,newBalance));
+                        }
+                    }
+                }
+                DatabaseReference usersRef = database.getReference("users");
+
+                for(int i = 0; i < members.size(); i++){
+
+                    //Updating balance for the logged user
+                    if(members.get(i).first.equals(user.getDisplayName())){
+                        for(int j = 0; j < newUserBalance.size(); j++){
+                            usersRef.child(members.get(i).second).child("groups").child(selectedGroup).child(newUserBalance.get(j).first).setValue(newUserBalance.get(j).second);
+                        }
+                    }//else update balance for other users in the group
+                    else{
+                        double invertedBalance = 0;
+                        for(int j = 0; j < newUserBalance.size(); j++){
+                            if(newUserBalance.get(j).first.equals(members.get(i).first)){
+                                invertedBalance = -newUserBalance.get(j).second;
+                            }
+                        }
+                        usersRef.child(members.get(i).second).child("groups").child(selectedGroup).child(user.getDisplayName()).setValue(invertedBalance);
+                    }
+                }
 
                 finish();
             }
@@ -166,5 +198,30 @@ public class AddExpenseActivity extends AppCompatActivity {
         }
 
         return membersBalance;
+    }
+
+    //method to get user balance inside a group from DB
+    private void getUserBalance(String userId, String groupName){
+
+        userBalance = new ArrayList<>();
+        DatabaseReference balanceRef = database.getReference("users/"+userId+"/groups/"+groupName);
+        balanceRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
+                    String member = singleSnapshot.getKey();
+                    double balance = (double) singleSnapshot.getValue();
+                    android.util.Pair<String, Double> memberBalance = new android.util.Pair<String, Double>(member,balance);
+                    userBalance.add(memberBalance);
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 }

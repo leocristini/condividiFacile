@@ -195,7 +195,6 @@ public class GroupActivity extends AppCompatActivity
             public void onClick(View v) {
                 Intent addExpenseIntent = new Intent(GroupActivity.this,AddExpenseActivity.class);
                 addExpenseIntent.putExtra("selectedGroup",selectedGroup);
-                addExpenseIntent.putExtra("userBalance",userBalance);
                 startActivity(addExpenseIntent);
             }
         });
@@ -208,6 +207,7 @@ public class GroupActivity extends AppCompatActivity
         revealLayout.setVisibility(View.INVISIBLE);
         try {
             getGroupExpenses(selectedGroup);
+            getUserBalance(currentUser.getUid(),selectedGroup);
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -306,7 +306,7 @@ public class GroupActivity extends AppCompatActivity
         for(int i = 0; i < userBalance.size(); i++){
             balanceSum = balanceSum + userBalance.get(i).second;
         }
-
+        balanceSum = Math.round(balanceSum*100)/100;
         final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
         TableLayout table = (TableLayout) expandableLayout.findViewById(R.id.balanceTable);
         table.setVisibility(View.INVISIBLE);
