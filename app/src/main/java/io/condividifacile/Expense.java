@@ -5,6 +5,7 @@ import android.util.Pair;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 /**
  * Created by gianma on 16/05/17.
@@ -18,7 +19,7 @@ public class Expense implements java.io.Serializable {
     private String date;
     private String description;
     private String photoPath;
-    private ArrayList<Pair<String,Double>> division;
+    private ArrayList<HashMap<String,Double>> division;
 
     public String getCategory() {
         return category;
@@ -68,11 +69,11 @@ public class Expense implements java.io.Serializable {
         this.description = description;
     }
 
-    public ArrayList<Pair<String, Double>> getDivision() {
+    public ArrayList<HashMap<String, Double>> getDivision() {
         return division;
     }
 
-    public void setDivision(ArrayList<Pair<String, Double>> division) {
+    public void setDivision(ArrayList<HashMap<String, Double>> division) {
         this.division = division;
     }
 }

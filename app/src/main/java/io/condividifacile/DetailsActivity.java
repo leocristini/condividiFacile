@@ -17,6 +17,7 @@ import android.widget.TextView;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class DetailsActivity extends AppCompatActivity {
 
@@ -84,8 +85,15 @@ public class DetailsActivity extends AppCompatActivity {
                 amountView.setText(""+exps.get(i).getAmount());
                 TextView dateView = (TextView) expandableLayout.findViewById(R.id.dateText);
                 dateView.setText(exps.get(i).getDate());
-                //TextView descrView = (TextView) expandableLayout.findViewById(R.id.descrText);
-                //descrView.setText(exps.get(i).getDescription());
+                TextView descrView = (TextView) expandableLayout.findViewById(R.id.descrText);
+                String divided = "";
+                if(exps.get(i).getDivision() != null) {
+                    for (int j = 0; j < exps.get(i).getDivision().size(); j++) {
+                        ArrayList <String> name = new ArrayList<>(exps.get(i).getDivision().get(j).keySet());
+                        divided = divided+name.get(0).split(" ")[0]+" ";
+                    }
+                    descrView.setText(divided);
+                }
                 final ImageView imageView = (ImageView) expandableLayout.findViewById(R.id.photoView);
                 if (exps.get(i).getPhotoPath() != null){
                     imageView.setImageResource(R.drawable.ic_block_black_24dp);

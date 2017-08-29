@@ -5,33 +5,26 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.v4.util.Pair;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Layout;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewAnimationUtils;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Description;
@@ -52,11 +45,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.StringTokenizer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class GroupActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -334,6 +326,15 @@ public class GroupActivity extends AppCompatActivity
             TextView balance = (TextView) row.findViewById(R.id.balance);
             balance.setText(userBalance.get(i).second.toString());
 
+            //TODO: Settle up button function
+            Button settleBtn = (Button) row.findViewById(R.id.settleBtn);
+            settleBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
+
             balanceTable.addView(row);
             registerForContextMenu(row);
         }
@@ -366,6 +367,13 @@ public class GroupActivity extends AppCompatActivity
                             exp.setCategory(category);
                             String date = (String) expense.child("date").getValue();
                             exp.setDate(date);
+                            ArrayList<HashMap<String,Double>> divisionList = (ArrayList<HashMap<String,Double>>) expense.child("division").getValue();
+                            ArrayList <Pair<String,Double>> formattedDivision = new ArrayList<Pair<String, Double>>();
+                            if(divisionList != null) {
+                                Log.d("swag", expense.child("division").getValue().toString());
+                                exp.setDivision(divisionList);
+                            }
+
                             //Missing date, description and photo on DB
                             expenses.add(exp);
                         }

@@ -23,6 +23,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 
 public class AddExpenseActivity extends AppCompatActivity {
 
@@ -123,29 +124,19 @@ public class AddExpenseActivity extends AppCompatActivity {
                     }
                 }
 
-                final ArrayList<Pair<String,Double>> divisions = divideEqually(amount,selectedMembers);
-
-                //Debug
-                for(int i = 0; i < divisions.size(); i++){
-                    if(!divisions.get(i).first.equalsIgnoreCase(user.getDisplayName())) {
-                        Log.d("swag", "To " + divisions.get(i).first + ": " + divisions.get(i).second);
-                    }else{
-                        Log.d("swag", "To " + divisions.get(i).first + ": " + divisions.get(i).second);
-                    }
-                }
+                final ArrayList<HashMap<String,Double>> divisions = divideEqually(amount,selectedMembers);
 
                 exp.setDivision(divisions);
                 expenseRef.push().setValue(exp);
 
-                //TODO: update user balance
                 final ArrayList<Pair<String,Double>> newUserBalance = new ArrayList<Pair<String, Double>>();
                 for(int i = 0; i < userBalance.size(); i++){
                     for(int j = 0; j < divisions.size(); j++){
-                        if(userBalance.get(i).first.equals(divisions.get(j).first)){
+                        if(divisions.get(j).get(userBalance.get(i).first) != null){
                             double oldBalance = userBalance.get(i).second;
-                            double newBalance = Math.round((oldBalance + divisions.get(j).second)*100.0)/100.0;
+                            double newBalance = Math.round((oldBalance + divisions.get(j).get(userBalance.get(i).first))*100.0)/100.0;
                             Log.d("swag","Old balance for "+userBalance.get(i).first+" was "+oldBalance+", new balance is "+newBalance);
-                            newUserBalance.add(new Pair<String, Double>(divisions.get(j).first,newBalance));
+                            newUserBalance.add(new Pair<String, Double>(userBalance.get(i).first,newBalance));
                         }
                     }
                 }
@@ -186,13 +177,15 @@ public class AddExpenseActivity extends AppCompatActivity {
     }
 
     // returns an ArrayList<Double> with the total divided in equal amounts as by the divider parameter
-    public ArrayList<Pair<String,Double>> divideEqually(double total, ArrayList<String> members)
+    public ArrayList<HashMap<String,Double>> divideEqually(double total, ArrayList<String> members)
     {
-        ArrayList<Pair<String,Double>> membersBalance = new ArrayList<>();
+        ArrayList<HashMap<String,Double>> membersBalance = new ArrayList<>();
         int divider = members.size();
         for(int i = 0; i < members.size(); i++) {
             double amount = Math.round((total / divider) * 100.0) / 100.0;
-            membersBalance.add(new Pair<String, Double>(members.get(i),amount));
+            HashMap <String,Double> map = new HashMap<>();
+            map.put(members.get(i),amount);
+            membersBalance.add(map);
             total -= amount;
             divider--;
         }
