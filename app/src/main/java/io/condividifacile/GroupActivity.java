@@ -1,12 +1,21 @@
 package io.condividifacile;
 
 import android.animation.Animator;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Shader;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -17,10 +26,12 @@ import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -47,13 +58,12 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 public class GroupActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     //this is the main activity for the project, must contain the sliding window and the group page
+    public static final int RSS_DOWNLOAD_REQUEST_CODE = 1;
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
     private FirebaseUser currentUser;
@@ -62,10 +72,11 @@ public class GroupActivity extends AppCompatActivity
     private PieChart pieChart;
     private String selectedGroup;
     private ArrayList <Expense> expenses;
+    private View header;
     private String email;
     private String name;
     private String uid;
-    private Uri photoUrl;
+    private String photoUrl;
     private ArrayList<String> groups;
     private ArrayList<Pair<String, Double>> userBalance;
 
@@ -87,11 +98,10 @@ public class GroupActivity extends AppCompatActivity
         //navigation menu settings
         NavigationView navView = (NavigationView) findViewById(R.id.nav_view);
         navView.setNavigationItemSelectedListener(this);
-        View header = navView.getHeaderView(0);
+        header = navView.getHeaderView(0);
         final Menu navMenu = navView.getMenu();
         final TextView nameView = (TextView) header.findViewById(R.id.nameView);
         final TextView emailView = (TextView) header.findViewById(R.id.emailView);
-        final ImageView userImage = (ImageView) header.findViewById(R.id.userImageView);
 
 
         mAuth = FirebaseAuth.getInstance();
@@ -105,8 +115,15 @@ public class GroupActivity extends AppCompatActivity
             email = currentUser.getEmail();
             emailView.setText(email);
             uid = currentUser.getUid();
-            photoUrl = currentUser.getPhotoUrl();
-            userImage.setImageURI(photoUrl);
+            photoUrl = currentUser.getPhotoUrl().toString();
+            if(photoUrl != null) {
+                PendingIntent pendingResult = createPendingResult(
+                        RSS_DOWNLOAD_REQUEST_CODE, new Intent(), 0);
+                Intent intent = new Intent(getApplicationContext(), DownloadIntentService.class);
+                intent.putExtra(DownloadIntentService.URL_EXTRA, photoUrl);
+                intent.putExtra(DownloadIntentService.PENDING_RESULT_EXTRA, pendingResult);
+                startService(intent);
+            }
             DatabaseReference groupsRef = database.getReference("users/" + uid + "/groups");
             groupsRef.addValueEventListener(new ValueEventListener() {
                 @Override
@@ -154,32 +171,58 @@ public class GroupActivity extends AppCompatActivity
             }
         });
 
-        /*
         expandableLayout.setOnTouchListener(new View.OnTouchListener() {
+
+            float X,Y;
+            private static final int SLIDE_THRESHOLD = 50;
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                int action = event.getAction();
-                switch (action){
-                    case (MotionEvent.ACTION_UP):
-                        if (!isExpanded[0]) {
-                            mAnimationManager.expand(expandableLayout, 500, 450);
-                            isExpanded[0] = true;
-                            expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
-                            return true;
+
+                switch (event.getAction()){
+
+                    case MotionEvent.ACTION_DOWN:
+                        X = event.getRawX();
+                        Y = event.getRawY();
+                        break;
+
+                    case MotionEvent.ACTION_MOVE:
+                        X = X + event.getX();
+                        Y = Y + event.getY();
+                        break;
+
+                    case MotionEvent.ACTION_UP:
+
+                        if(Math.abs(Y) > Math.abs(X)){
+                            if(Math.abs(Y) > SLIDE_THRESHOLD){
+                                if(Y > 0){
+                                    //Slide down
+                                    if(isExpanded[0]){
+                                        mAnimationManager.collapse(expandableLayout, 500, 200);
+                                        isExpanded[0] = false;
+                                        expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_up_black_24dp);
+                                        if(selectedGroup != null){
+                                            shortBalance();
+                                        }
+                                    }
+                                }else{
+                                    if (!isExpanded[0]) {
+                                        mAnimationManager.expand(expandableLayout, 500, 450);
+                                        isExpanded[0] = true;
+                                        expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
+                                        if(selectedGroup != null){
+                                            detailsBalance();
+                                        }
+                                    }
+                                }
+                            }
                         }
-                    case (MotionEvent.ACTION_DOWN):
-                        if (isExpanded[0]) {
-                            mAnimationManager.collapse(expandableLayout, 500, 200);
-                            isExpanded[0] = false;
-                            expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_up_black_24dp);
-                            return true;
-                        }
-                    default:
-                            return false;
+
+                        break;
                 }
+                return true;
             }
         });
-        */
 
         final FloatingActionButton addExpBtn = (FloatingActionButton) findViewById(R.id.addExp);
         addExpBtn.setOnClickListener(new View.OnClickListener() {
@@ -534,6 +577,32 @@ public class GroupActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == RSS_DOWNLOAD_REQUEST_CODE) {
+            switch (resultCode) {
+                case DownloadIntentService.INVALID_URL_CODE:
+                    Log.e("Error","Invalid URL");
+                    break;
+                case DownloadIntentService.ERROR_CODE:
+                    Log.e("Error","Error downloading data");
+                    break;
+                case DownloadIntentService.RESULT_CODE:
+                    ImageView userImage = (ImageView) header.findViewById(R.id.userImageView);
+                    Bitmap bm = data.getParcelableExtra("url");
+                    Bitmap circleBitmap = Bitmap.createBitmap(bm.getWidth(), bm.getHeight(), Bitmap.Config.ARGB_8888);
 
+                    BitmapShader shader = new BitmapShader (bm,  Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+                    Paint paint = new Paint();
+                    paint.setShader(shader);
+                    paint.setAntiAlias(true);
+                    Canvas c = new Canvas(circleBitmap);
+                    c.drawCircle(bm.getWidth()/2, bm.getHeight()/2, bm.getWidth()/2, paint);
+                    userImage.setImageBitmap(circleBitmap);
+                    break;
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
 }

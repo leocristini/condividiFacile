@@ -33,6 +33,9 @@
             android:label="@string/title_activity_group"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".AddGroupActivity"></activity>
+        <service
+            android:name=".DownloadIntentService"
+            android:exported="false"/>
     </application>
 
 </manifest>
