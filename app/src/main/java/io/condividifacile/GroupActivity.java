@@ -9,6 +9,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Shader;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -78,6 +79,7 @@ public class GroupActivity extends AppCompatActivity
     private String uid;
     private String photoUrl;
     private ArrayList<String> groups;
+    private ArrayList<Pair<String,String>> members;
     private ArrayList<Pair<String, Double>> userBalance;
 
     @Override
@@ -87,6 +89,7 @@ public class GroupActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         groups = new ArrayList<>();
+        members = new ArrayList<>();
         pieChart = (PieChart) findViewById(R.id.piechart);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -311,18 +314,16 @@ public class GroupActivity extends AppCompatActivity
     //method to get user balance inside a group from DB
     private void getUserBalance(String userId, String groupName){
 
-        userBalance = new ArrayList<>();
         DatabaseReference balanceRef = database.getReference("users/"+userId+"/groups/"+groupName);
         balanceRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-
+                userBalance = new ArrayList<>();
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                     String member = singleSnapshot.getKey();
-                    double balance = (double) singleSnapshot.getValue();
+                    double balance = Double.parseDouble(singleSnapshot.getValue().toString());
                     Pair<String, Double> memberBalance = new Pair<String, Double>(member,balance);
                     userBalance.add(memberBalance);
-                    shortBalance();
                 }
 
             }
@@ -332,6 +333,7 @@ public class GroupActivity extends AppCompatActivity
 
             }
         });
+        shortBalance();
     }
 
     //method to hide user balance details
@@ -347,7 +349,7 @@ public class GroupActivity extends AppCompatActivity
         table.setVisibility(View.INVISIBLE);
         TextView totalBalance = (TextView) findViewById(R.id.totalBalance);
         totalBalance.setVisibility(View.VISIBLE);
-
+        totalBalance.setTypeface(null, Typeface.BOLD);
         totalBalance.setText("Total balance: "+balanceSum);
 
     }
@@ -358,7 +360,7 @@ public class GroupActivity extends AppCompatActivity
         final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
         TextView totalBalance = (TextView) findViewById(R.id.totalBalance);
         totalBalance.setVisibility(View.INVISIBLE);
-        TableLayout balanceTable = (TableLayout) expandableLayout.findViewById(R.id.balanceTable);
+        final TableLayout balanceTable = (TableLayout) expandableLayout.findViewById(R.id.balanceTable);
         balanceTable.removeAllViews();
         balanceTable.setVisibility(View.VISIBLE);
 
@@ -369,12 +371,22 @@ public class GroupActivity extends AppCompatActivity
             TextView balance = (TextView) row.findViewById(R.id.balance);
             balance.setText(userBalance.get(i).second.toString());
 
-            //TODO: Settle up button function
-            Button settleBtn = (Button) row.findViewById(R.id.settleBtn);
+
+            final Button settleBtn = (Button) row.findViewById(R.id.settleBtn);
             settleBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    String member = ((TextView) row.findViewById(R.id.member)).getText().toString();
+                    DatabaseReference userRef = database.getReference("users");
+                    userRef.child(currentUser.getUid()).child("groups").child(selectedGroup).child(member).setValue(0);
+                    String memberId = null;
+                    for(int k = 0; k < members.size(); k++){
+                        if(member.equalsIgnoreCase(members.get(k).first)){
+                            memberId = members.get(k).second;
+                        }
+                    }
+                    userRef.child(memberId).child("groups").child(selectedGroup).child(currentUser.getDisplayName()).setValue(0);
+                    detailsBalance();
                 }
             });
 
@@ -420,6 +432,9 @@ public class GroupActivity extends AppCompatActivity
                             //Missing date, description and photo on DB
                             expenses.add(exp);
                         }
+                         for(DataSnapshot member :  singleSnapshot.child("members").getChildren()){
+                             members.add(new Pair<String, String>(member.getKey(),member.getValue().toString()));
+                         }
                     }
 
 
@@ -568,7 +583,7 @@ public class GroupActivity extends AppCompatActivity
             PieData data = new PieData();
             data.setDataSet(dataSet);
             data.setValueFormatter(new PercentFormatter());
-            data.setValueTextColor(Color.GRAY);
+            data.setValueTextColor(Color.BLACK);
             data.setValueTextSize(11f);
 
             pieChart.setData(data);

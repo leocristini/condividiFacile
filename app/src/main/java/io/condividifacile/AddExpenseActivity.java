@@ -204,7 +204,7 @@ public class AddExpenseActivity extends AppCompatActivity {
 
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                     String member = singleSnapshot.getKey();
-                    double balance = (double) singleSnapshot.getValue();
+                    double balance = Double.parseDouble(singleSnapshot.getValue().toString());
                     android.util.Pair<String, Double> memberBalance = new android.util.Pair<String, Double>(member,balance);
                     userBalance.add(memberBalance);
                 }
