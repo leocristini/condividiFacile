@@ -10,13 +10,10 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Shader;
 import android.graphics.Typeface;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -32,7 +29,6 @@ import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -84,7 +80,9 @@ public class GroupActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+        Log.d("swag","CREATED ACTIVITY");
         setContentView(R.layout.activity_group);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -106,45 +104,49 @@ public class GroupActivity extends AppCompatActivity
         final TextView nameView = (TextView) header.findViewById(R.id.nameView);
         final TextView emailView = (TextView) header.findViewById(R.id.emailView);
 
-
-        mAuth = FirebaseAuth.getInstance();
-
         //Getting user data and groups
         database = FirebaseDatabase.getInstance();
-        currentUser = mAuth.getCurrentUser();
-        if(currentUser != null) {
-            name = currentUser.getDisplayName();
-            nameView.setText(name);
-            email = currentUser.getEmail();
-            emailView.setText(email);
-            uid = currentUser.getUid();
-            photoUrl = currentUser.getPhotoUrl().toString();
-            if(photoUrl != null) {
-                PendingIntent pendingResult = createPendingResult(
-                        RSS_DOWNLOAD_REQUEST_CODE, new Intent(), 0);
-                Intent intent = new Intent(getApplicationContext(), DownloadIntentService.class);
-                intent.putExtra(DownloadIntentService.URL_EXTRA, photoUrl);
-                intent.putExtra(DownloadIntentService.PENDING_RESULT_EXTRA, pendingResult);
-                startService(intent);
-            }
-            DatabaseReference groupsRef = database.getReference("users/" + uid + "/groups");
-            groupsRef.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
-                        String group = singleSnapshot.getKey();
-                        groups.add(group);
-                        navMenu.add(R.id.groups_menu,groups.indexOf(group),Menu.NONE,group);
+        mAuth = FirebaseAuth.getInstance();
+        mAuth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                currentUser = mAuth.getCurrentUser();
+                if(currentUser != null) {
+                    name = currentUser.getDisplayName();
+                    nameView.setText(name);
+                    email = currentUser.getEmail();
+                    emailView.setText(email);
+                    uid = currentUser.getUid();
+                    photoUrl = currentUser.getPhotoUrl().toString();
+                    if(photoUrl != null) {
+                        PendingIntent pendingResult = createPendingResult(
+                                RSS_DOWNLOAD_REQUEST_CODE, new Intent(), 0);
+                        Intent intent = new Intent(getApplicationContext(), DownloadIntentService.class);
+                        intent.putExtra(DownloadIntentService.URL_EXTRA, photoUrl);
+                        intent.putExtra(DownloadIntentService.PENDING_RESULT_EXTRA, pendingResult);
+                        startService(intent);
                     }
+                    DatabaseReference groupsRef = database.getReference("users/" + uid + "/groups");
+                    groupsRef.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
+                                String group = singleSnapshot.getKey();
+                                groups.add(group);
+                                navMenu.add(R.id.groups_menu,groups.indexOf(group),Menu.NONE,group);
+                            }
 
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
                 }
+            }
+        });
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-        }
 
         //From here on is the expandableLayout on the bottom
         final FloatingActionButton expand_btn = (FloatingActionButton) findViewById(R.id.expandbtn);
@@ -228,6 +230,11 @@ public class GroupActivity extends AppCompatActivity
         });
 
         final FloatingActionButton addExpBtn = (FloatingActionButton) findViewById(R.id.addExp);
+        if(selectedGroup == null){
+            addExpBtn.setVisibility(View.INVISIBLE);
+        }else{
+            addExpBtn.setVisibility(View.VISIBLE);
+        }
         addExpBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -243,13 +250,22 @@ public class GroupActivity extends AppCompatActivity
     protected void onResume() {
         RelativeLayout revealLayout = (RelativeLayout) findViewById(R.id.transitionLayout);
         revealLayout.setVisibility(View.INVISIBLE);
+        FloatingActionButton addExpBtn = (FloatingActionButton) findViewById(R.id.addExp);
+        if(selectedGroup == null){
+            addExpBtn.setVisibility(View.INVISIBLE);
+        }else{
+            addExpBtn.setVisibility(View.VISIBLE);
+        }
         try {
-            getGroupExpenses(selectedGroup);
-            getUserBalance(currentUser.getUid(),selectedGroup);
+            if(currentUser != null) {
+                getGroupExpenses(selectedGroup);
+                getUserBalance(currentUser.getUid(), selectedGroup);
+            }
         }catch (Exception e) {
             e.printStackTrace();
         }
         super.onResume();
+        Log.d("swag","RESUMED ACTIVITY");
     }
 
     @Override
@@ -303,7 +319,12 @@ public class GroupActivity extends AppCompatActivity
             selectedGroup = groups.get(id);
             getGroupExpenses(selectedGroup);
             getUserBalance(uid,selectedGroup);
-
+            FloatingActionButton addExpBtn = (FloatingActionButton) findViewById(R.id.addExp);
+            if(selectedGroup == null){
+                addExpBtn.setVisibility(View.INVISIBLE);
+            }else{
+                addExpBtn.setVisibility(View.VISIBLE);
+            }
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -340,18 +361,24 @@ public class GroupActivity extends AppCompatActivity
     private void shortBalance(){
 
         double balanceSum = 0;
-        for(int i = 0; i < userBalance.size(); i++){
-            balanceSum = balanceSum + userBalance.get(i).second;
+        if(userBalance != null) {
+            for (int i = 0; i < userBalance.size(); i++) {
+                balanceSum = balanceSum + userBalance.get(i).second;
+            }
+            balanceSum = Math.round(balanceSum * 100) / 100;
+            final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
+            TableLayout table = (TableLayout) expandableLayout.findViewById(R.id.balanceTable);
+            table.setVisibility(View.INVISIBLE);
+            TextView totalBalance = (TextView) findViewById(R.id.totalBalance);
+            totalBalance.setVisibility(View.VISIBLE);
+            totalBalance.setTypeface(null, Typeface.BOLD);
+            totalBalance.setText("Total balance: " + balanceSum);
+        }else{
+            TextView totalBalance = (TextView) findViewById(R.id.totalBalance);
+            totalBalance.setVisibility(View.VISIBLE);
+            totalBalance.setTypeface(null, Typeface.BOLD);
+            totalBalance.setText("No data to show");
         }
-        balanceSum = Math.round(balanceSum*100)/100;
-        final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
-        TableLayout table = (TableLayout) expandableLayout.findViewById(R.id.balanceTable);
-        table.setVisibility(View.INVISIBLE);
-        TextView totalBalance = (TextView) findViewById(R.id.totalBalance);
-        totalBalance.setVisibility(View.VISIBLE);
-        totalBalance.setTypeface(null, Typeface.BOLD);
-        totalBalance.setText("Total balance: "+balanceSum);
-
     }
 
     //method to show user balance details
@@ -399,11 +426,12 @@ public class GroupActivity extends AppCompatActivity
     //method to get group expenses from DB
     private void getGroupExpenses(final String groupName){
 
-        expenses = new ArrayList<>();
+
         DatabaseReference expRef = database.getReference("groups");
         expRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                expenses = new ArrayList<>();
                 int categoriesCount = 0;
                 ArrayList <String> categories = new ArrayList<String>();
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
