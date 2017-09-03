@@ -82,12 +82,12 @@ public class GroupActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        Log.d("swag","CREATED ACTIVITY");
         setContentView(R.layout.activity_group);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         groups = new ArrayList<>();
         members = new ArrayList<>();
+        userBalance = new ArrayList<>();
         pieChart = (PieChart) findViewById(R.id.piechart);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -159,7 +159,7 @@ public class GroupActivity extends AppCompatActivity
             public void onClick(View v) {
 
                 if (!isExpanded[0]) {
-                    mAnimationManager.expand(expandableLayout, 500, 450);
+                    mAnimationManager.expand(expandableLayout, 500, 800);
                     isExpanded[0] = true;
                     expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
                     if(selectedGroup != null){
@@ -212,7 +212,7 @@ public class GroupActivity extends AppCompatActivity
                                     }
                                 }else{
                                     if (!isExpanded[0]) {
-                                        mAnimationManager.expand(expandableLayout, 500, 450);
+                                        mAnimationManager.expand(expandableLayout, 500, 800);
                                         isExpanded[0] = true;
                                         expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
                                         if(selectedGroup != null){
@@ -265,7 +265,6 @@ public class GroupActivity extends AppCompatActivity
             e.printStackTrace();
         }
         super.onResume();
-        Log.d("swag","RESUMED ACTIVITY");
     }
 
     @Override
@@ -339,13 +338,14 @@ public class GroupActivity extends AppCompatActivity
         balanceRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                userBalance = new ArrayList<>();
+                userBalance.clear();
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                     String member = singleSnapshot.getKey();
                     double balance = Double.parseDouble(singleSnapshot.getValue().toString());
                     Pair<String, Double> memberBalance = new Pair<String, Double>(member,balance);
                     userBalance.add(memberBalance);
                 }
+                shortBalance();
 
             }
 
@@ -354,12 +354,12 @@ public class GroupActivity extends AppCompatActivity
 
             }
         });
+
         shortBalance();
     }
 
     //method to hide user balance details
     private void shortBalance(){
-
         double balanceSum = 0;
         if(userBalance != null) {
             for (int i = 0; i < userBalance.size(); i++) {
@@ -383,7 +383,6 @@ public class GroupActivity extends AppCompatActivity
 
     //method to show user balance details
     private void detailsBalance(){
-
         final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
         TextView totalBalance = (TextView) findViewById(R.id.totalBalance);
         totalBalance.setVisibility(View.INVISIBLE);
@@ -413,7 +412,6 @@ public class GroupActivity extends AppCompatActivity
                         }
                     }
                     userRef.child(memberId).child("groups").child(selectedGroup).child(currentUser.getDisplayName()).setValue(0);
-                    detailsBalance();
                 }
             });
 
@@ -453,7 +451,6 @@ public class GroupActivity extends AppCompatActivity
                             ArrayList<HashMap<String,Double>> divisionList = (ArrayList<HashMap<String,Double>>) expense.child("division").getValue();
                             ArrayList <Pair<String,Double>> formattedDivision = new ArrayList<Pair<String, Double>>();
                             if(divisionList != null) {
-                                Log.d("swag", expense.child("division").getValue().toString());
                                 exp.setDivision(divisionList);
                             }
 

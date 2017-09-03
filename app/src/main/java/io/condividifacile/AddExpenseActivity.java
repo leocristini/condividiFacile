@@ -145,15 +145,17 @@ public class AddExpenseActivity extends AppCompatActivity {
                 for(int i = 0; i < members.size(); i++){
 
                     //Updating balance for the logged user
-                    if(members.get(i).first.equals(user.getDisplayName())){
-                        for(int j = 0; j < newUserBalance.size(); j++){
-                            usersRef.child(members.get(i).second).child("groups").child(selectedGroup).child(newUserBalance.get(j).first).setValue(newUserBalance.get(j).second);
+                    if(members.get(i).first.equalsIgnoreCase(user.getDisplayName())){
+                        for(int j = 0; j < newUserBalance.size(); j++) {
+                            if (!members.get(i).first.equalsIgnoreCase(newUserBalance.get(j).first)) {
+                                usersRef.child(members.get(i).second).child("groups").child(selectedGroup).child(newUserBalance.get(j).first).setValue(newUserBalance.get(j).second);
+                            }
                         }
                     }//else update balance for other users in the group
                     else{
                         double invertedBalance = 0;
                         for(int j = 0; j < newUserBalance.size(); j++){
-                            if(newUserBalance.get(j).first.equals(members.get(i).first)){
+                            if(newUserBalance.get(j).first.equalsIgnoreCase(members.get(i).first)){
                                 invertedBalance = -newUserBalance.get(j).second;
                             }
                         }

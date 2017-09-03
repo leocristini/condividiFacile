@@ -104,7 +104,7 @@ public class DetailsActivity extends AppCompatActivity {
 
                         if (!isExpanded[0]) {
                             expandableLayout.setVisibility(View.VISIBLE);
-                            mAnimationManager.expand(expandableLayout, 500, 400);
+                            mAnimationManager.expand(expandableLayout, 500, 800);
                             isExpanded[0] = true;
                         }else{
                             mAnimationManager.collapse(expandableLayout, 500, 0);
