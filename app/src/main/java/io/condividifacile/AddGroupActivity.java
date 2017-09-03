@@ -1,8 +1,7 @@
 package io.condividifacile;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +16,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class AddGroupActivity extends AppCompatActivity {
 
@@ -57,7 +55,7 @@ public class AddGroupActivity extends AppCompatActivity {
 
     }
 
-    void createGroup(){
+    private void createGroup(){
 
         EditText gorupName = (EditText) findViewById(R.id.group_name);
         String groupName = gorupName.getText().toString();
@@ -88,14 +86,19 @@ public class AddGroupActivity extends AppCompatActivity {
     }
 
     void addMoreUsers(){
-        LinearLayout ll = (LinearLayout)findViewById(R.id.add_users_layout);
-        EditText et = new EditText(this);
-        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        et.setLayoutParams(p);
-        et.setHint("e-Mail");
-        et.setId(numberOfLines + 1);
-        ll.addView(et,numberOfLines);
-        numberOfLines++;
+
+        if(numberOfLines < 5) {
+            LinearLayout ll = (LinearLayout) findViewById(R.id.add_users_layout);
+            EditText et = new EditText(this);
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            et.setLayoutParams(p);
+
+            et.setEms(10);
+            et.setHint("e-Mail");
+            et.setId(numberOfLines + 1);
+            ll.addView(et);
+            numberOfLines++;
+        }
     }
 
 }
