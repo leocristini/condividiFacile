@@ -68,8 +68,10 @@ public class GroupActivity extends AppCompatActivity
     private ArrayList<Integer> colors;
     private PieChart pieChart;
     private String selectedGroup;
+    private String groupId;
     private ArrayList <Expense> expenses;
     private View header;
+    private Menu menu;
     private String email;
     private String name;
     private String uid;
@@ -130,6 +132,8 @@ public class GroupActivity extends AppCompatActivity
                     groupsRef.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
+                            groups.clear();
+                            navMenu.removeGroup(R.id.groups_menu);
                             for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                                 String group = singleSnapshot.getKey();
                                 groups.add(group);
@@ -152,6 +156,7 @@ public class GroupActivity extends AppCompatActivity
         final FloatingActionButton expand_btn = (FloatingActionButton) findViewById(R.id.expandbtn);
         final RelativeLayout expandableLayout = (RelativeLayout) findViewById(R.id.expandableLayout);
         final boolean[] isExpanded = {false};
+        expand_btn.setTag(false);
         mAnimationManager = new ExpandOrCollapse();
 
         expand_btn.setOnClickListener(new View.OnClickListener() {
@@ -159,16 +164,19 @@ public class GroupActivity extends AppCompatActivity
             public void onClick(View v) {
 
                 if (!isExpanded[0]) {
-                    mAnimationManager.expand(expandableLayout, 500, 800);
+                    DisplayMetrics dm = getResources().getDisplayMetrics();
+                    mAnimationManager.expand(expandableLayout, 350, dm.heightPixels/2);
                     isExpanded[0] = true;
                     expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
+                    expand_btn.setTag(true);
                     if(selectedGroup != null){
                         detailsBalance();
                     }
                 }else {
-                    mAnimationManager.collapse(expandableLayout, 500, 200);
+                    mAnimationManager.collapse(expandableLayout, 350, 200);
                     isExpanded[0] = false;
                     expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_up_black_24dp);
+                    expand_btn.setTag(false);
                     if(selectedGroup != null){
                         shortBalance();
                     }
@@ -203,7 +211,7 @@ public class GroupActivity extends AppCompatActivity
                                 if(Y > 0){
                                     //Slide down
                                     if(isExpanded[0]){
-                                        mAnimationManager.collapse(expandableLayout, 500, 200);
+                                        mAnimationManager.collapse(expandableLayout, 250, 200);
                                         isExpanded[0] = false;
                                         expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_up_black_24dp);
                                         if(selectedGroup != null){
@@ -212,7 +220,8 @@ public class GroupActivity extends AppCompatActivity
                                     }
                                 }else{
                                     if (!isExpanded[0]) {
-                                        mAnimationManager.expand(expandableLayout, 500, 800);
+                                        DisplayMetrics dm = getResources().getDisplayMetrics();
+                                        mAnimationManager.expand(expandableLayout, 250, dm.heightPixels/2);
                                         isExpanded[0] = true;
                                         expand_btn.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
                                         if(selectedGroup != null){
@@ -248,21 +257,13 @@ public class GroupActivity extends AppCompatActivity
 
     @Override
     protected void onResume() {
-        RelativeLayout revealLayout = (RelativeLayout) findViewById(R.id.transitionLayout);
-        revealLayout.setVisibility(View.INVISIBLE);
+        RelativeLayout transitionLayout = (RelativeLayout) findViewById(R.id.transitionLayout);
+        transitionLayout.setVisibility(View.INVISIBLE);
         FloatingActionButton addExpBtn = (FloatingActionButton) findViewById(R.id.addExp);
         if(selectedGroup == null){
             addExpBtn.setVisibility(View.INVISIBLE);
         }else{
             addExpBtn.setVisibility(View.VISIBLE);
-        }
-        try {
-            if(currentUser != null) {
-                getGroupExpenses(selectedGroup);
-                getUserBalance(currentUser.getUid(), selectedGroup);
-            }
-        }catch (Exception e) {
-            e.printStackTrace();
         }
         super.onResume();
     }
@@ -280,7 +281,12 @@ public class GroupActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.activity_group_drawer, menu);
+        getMenuInflater().inflate(R.menu.menu_options, menu);
+        if(selectedGroup == null){
+            menu.findItem(R.id.add_member).setVisible(false);
+            menu.findItem(R.id.delete_group).setVisible(false);
+        }
+        this.menu = menu;
         return true;
     }
 
@@ -292,8 +298,17 @@ public class GroupActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        if (id == R.id.delete_group) {
+            DatabaseReference groupRef = database.getReference("groups");
+            DatabaseReference usersRef = database.getReference("users");
+            groupRef.child(groupId).removeValue();
+            for(int i = 0; i < members.size(); i++){
+                usersRef.child(members.get(i).second).child("groups").child(selectedGroup).removeValue();
+            }
+            selectedGroup = null;
+            onBackPressed();
+        }else if (id == R.id.add_member){
+            //TODO: Add member to group
         }
 
         return super.onOptionsItemSelected(item);
@@ -315,9 +330,13 @@ public class GroupActivity extends AppCompatActivity
             startActivity(i);
 
         } else {
+            menu.findItem(R.id.delete_group).setVisible(true);
+            menu.findItem(R.id.add_member).setVisible(true);
             selectedGroup = groups.get(id);
+            this.setTitle(selectedGroup);
             getGroupExpenses(selectedGroup);
             getUserBalance(uid,selectedGroup);
+            shortBalance();
             FloatingActionButton addExpBtn = (FloatingActionButton) findViewById(R.id.addExp);
             if(selectedGroup == null){
                 addExpBtn.setVisibility(View.INVISIBLE);
@@ -333,7 +352,7 @@ public class GroupActivity extends AppCompatActivity
 
     //method to get user balance inside a group from DB
     private void getUserBalance(String userId, String groupName){
-
+        final FloatingActionButton expand_btn = (FloatingActionButton) findViewById(R.id.expandbtn);
         DatabaseReference balanceRef = database.getReference("users/"+userId+"/groups/"+groupName);
         balanceRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -345,8 +364,11 @@ public class GroupActivity extends AppCompatActivity
                     Pair<String, Double> memberBalance = new Pair<String, Double>(member,balance);
                     userBalance.add(memberBalance);
                 }
-                shortBalance();
-
+                if(expand_btn.getTag().equals(true)) {
+                    detailsBalance();
+                }else if(expand_btn.getTag().equals(false)){
+                    shortBalance();
+                }
             }
 
             @Override
@@ -354,8 +376,6 @@ public class GroupActivity extends AppCompatActivity
 
             }
         });
-
-        shortBalance();
     }
 
     //method to hide user balance details
@@ -425,16 +445,18 @@ public class GroupActivity extends AppCompatActivity
     private void getGroupExpenses(final String groupName){
 
 
-        DatabaseReference expRef = database.getReference("groups");
-        expRef.addValueEventListener(new ValueEventListener() {
+        DatabaseReference groupsRef = database.getReference("groups");
+        groupsRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 expenses = new ArrayList<>();
                 int categoriesCount = 0;
                 ArrayList <String> categories = new ArrayList<String>();
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
-                    //if (singleSnapshot.child("name").getValue().equals(groupName)){
-                     if(singleSnapshot.getKey().equals(groupName)){
+                    String name = (String) singleSnapshot.child("name").getValue();
+                    HashMap <String,String> groupMembers = (HashMap<String, String>) singleSnapshot.child("members").getValue();
+                    if (name.equals(groupName) && groupMembers.containsKey(currentUser.getDisplayName())){
+                        groupId = singleSnapshot.getKey();
                         for(DataSnapshot category : singleSnapshot.child("categories").getChildren()){
                             categories.add(category.getKey());
                         }
@@ -448,8 +470,7 @@ public class GroupActivity extends AppCompatActivity
                             exp.setCategory(category);
                             String date = (String) expense.child("date").getValue();
                             exp.setDate(date);
-                            ArrayList<HashMap<String,Double>> divisionList = (ArrayList<HashMap<String,Double>>) expense.child("division").getValue();
-                            ArrayList <Pair<String,Double>> formattedDivision = new ArrayList<Pair<String, Double>>();
+                            HashMap<String,Double> divisionList = (HashMap<String,Double>) expense.child("division").getValue();
                             if(divisionList != null) {
                                 exp.setDivision(divisionList);
                             }
@@ -457,9 +478,10 @@ public class GroupActivity extends AppCompatActivity
                             //Missing date, description and photo on DB
                             expenses.add(exp);
                         }
-                         for(DataSnapshot member :  singleSnapshot.child("members").getChildren()){
-                             members.add(new Pair<String, String>(member.getKey(),member.getValue().toString()));
-                         }
+                        members.clear();
+                        for(DataSnapshot member :  singleSnapshot.child("members").getChildren()){
+                            members.add(new Pair<String, String>(member.getKey(),member.getValue().toString()));
+                        }
                     }
 
 
@@ -476,8 +498,6 @@ public class GroupActivity extends AppCompatActivity
                     entries.add(e);
                 }
                 updateChart(entries);
-
-
             }
 
             @Override
@@ -614,7 +634,10 @@ public class GroupActivity extends AppCompatActivity
             pieChart.setData(data);
             pieChart.highlightValues(null);
             pieChart.invalidate();
+        }else{
+            pieChart.clear();
         }
+        shortBalance();
     }
 
     @Override

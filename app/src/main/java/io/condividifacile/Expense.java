@@ -19,7 +19,7 @@ public class Expense implements java.io.Serializable {
     private String date;
     private String description;
     private String photoPath;
-    private ArrayList<HashMap<String,Double>> division;
+    private HashMap<String,Double> division;
 
     public String getCategory() {
         return category;
@@ -69,11 +69,11 @@ public class Expense implements java.io.Serializable {
         this.description = description;
     }
 
-    public ArrayList<HashMap<String, Double>> getDivision() {
+    public HashMap<String, Double> getDivision() {
         return division;
     }
 
-    public void setDivision(ArrayList<HashMap<String, Double>> division) {
+    public void setDivision(HashMap<String, Double> division) {
         this.division = division;
     }
 }

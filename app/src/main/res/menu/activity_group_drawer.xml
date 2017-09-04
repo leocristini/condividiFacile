@@ -2,16 +2,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/navigation_menu">
 
-    <item android:title="Groups">
+    <group>
         <group android:id="@+id/groups_menu">
-            <item
-                android:id="@+id/add_group"
-                android:orderInCategory="500"
-                android:title="Add Group"
-                android:icon="@drawable/ic_add_black_24dp" />
+
         </group>
 
-    </item>
+    <item
+        android:id="@+id/add_group"
+        android:orderInCategory="500"
+        android:title="Add Group"
+        android:icon="@drawable/ic_add_black_24dp" />
+    </group>
     <group android:orderInCategory="999">
         <item android:title="Communicate">
                 <item

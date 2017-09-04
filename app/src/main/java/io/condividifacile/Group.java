@@ -1,6 +1,7 @@
 package io.condividifacile;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by leonardo on 23/08/17.
@@ -9,16 +10,16 @@ import java.util.ArrayList;
 public class Group {
 
     private String name;
-    private ArrayList<String> members;
+    private HashMap<String,String> members;
     private ArrayList<Expense> expenses;
     private ArrayList<String> categories;
 
-    public Group(String name,ArrayList<String> members){
+    public Group(String name,HashMap<String,String> members){
         this.name = name;
         this.members = members;
     }
 
-    public Group(String name, ArrayList<String> members, ArrayList<Expense> expenses, ArrayList<String> categories) {
+    public Group(String name, HashMap<String,String> members, ArrayList<Expense> expenses, ArrayList<String> categories) {
 
         this.name = name;
         this.members = members;
@@ -34,22 +35,8 @@ public class Group {
         this.name = name;
     }
 
-    public ArrayList<String> getMembers() {
+    public HashMap<String, String> getMembers() {
         return members;
-    }
-
-    public void setMembers(ArrayList<String> members) {
-        this.members = members;
-    }
-    //aggiungi utente / rimuovi utente
-    public void addUser(String user){
-        this.members.add(user);
-    }
-    public void removeUSer(String user){
-        for(int i = 0; i<this.members.size();i++){
-            if(this.members.get(i) == user)
-                this.members.remove(i);
-        }
     }
 
     public ArrayList<Expense> getExpenses() {

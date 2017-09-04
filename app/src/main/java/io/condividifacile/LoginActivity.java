@@ -117,9 +117,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             Intent i = new Intent(LoginActivity.this,GroupActivity.class);
                             if(progressDialog != null) {
                                 progressDialog.dismiss();
+                                startActivity(i);
+                                finish();
                             }
-                            startActivity(i);
-                            finish();
                         }
 
                         @Override

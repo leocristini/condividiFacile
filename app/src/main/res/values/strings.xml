@@ -1,6 +1,5 @@
 <resources>
-    <string name="app_name">condividiFacile</string>
-    <string name="title_activity_login">Sign in</string>
+    <string name="app_name">easyShare</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
@@ -15,8 +14,12 @@
         completions."
     </string>
 
+    <string name="title_activity_add_group">New group</string>
+    <string name="title_activity_add_expense">New expense</string>
+    <string name="title_activity_group">easyShare</string>
+
     <!-- Strings related to welcome activity -->
-    <string name="title_activity_welcome">Home Screen</string>
+    <string name="title_activity_welcome">easyShare</string>
     <string name="next">NEXT</string>
     <string name="skip">SKIP</string>
     <string name="start">GOT IT</string>
@@ -40,5 +43,4 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="title_activity_group">GroupActivity</string>
 </resources>
