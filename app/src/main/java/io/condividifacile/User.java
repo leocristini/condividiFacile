@@ -16,6 +16,7 @@ public class User {
     public User(String name, String email, ArrayList<String> groups, double saldo) {
         this.name = name;
         this.email = email;
+
         this.groups = groups;
         this.saldo = saldo;
     }
@@ -35,6 +36,7 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+
     }
 
     public ArrayList<String> getGroups() {

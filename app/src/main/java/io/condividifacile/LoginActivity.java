@@ -36,6 +36,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,6 +65,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private String name;
     private String uid;
     private ProgressDialog progressDialog;
+
+    private FirebaseUser currentUser;
 
 
     //private final String requestIdToken = "330534537163-nva8rsq48pl40oadh90cjmqhhe6vetqs.apps.googleusercontent.com";
@@ -184,6 +187,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d("swag", "signInWithCredential:success");
+
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w("swag", "signInWithCredential:failure", task.getException());
@@ -257,6 +261,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = result.getSignInAccount();
                 firebaseAuthWithGoogle(account);
+
 
             } else {
                 Toast.makeText(this,"Error signing in",Toast.LENGTH_LONG);

@@ -168,7 +168,7 @@ public class AddGroupActivity extends AppCompatActivity {
             }
         });
 
-
+        //TODO sistema l' aggiunta del gruppo nel database (togli la chiave iniziale)
 
     }
 
