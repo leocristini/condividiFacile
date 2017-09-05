@@ -59,7 +59,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private GoogleApiClient mGoogleApiClient;
     private FirebaseDatabase database;
     private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
     private User user;
     private String email;
     private String name;

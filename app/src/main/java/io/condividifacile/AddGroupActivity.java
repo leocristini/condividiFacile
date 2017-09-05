@@ -1,14 +1,10 @@
 package io.condividifacile;
 
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
-import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -25,10 +21,12 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class AddGroupActivity extends AppCompatActivity {
 
@@ -135,7 +133,7 @@ public class AddGroupActivity extends AppCompatActivity {
 
                     //Creating new group balance inside each user
                     if(usersExist) {
-                        ArrayList<String> memberNames = new ArrayList<String>(members.keySet());
+                        final ArrayList<String> memberNames = new ArrayList<String>(members.keySet());
                         for (int j = 0; j < memberNames.size(); j++) {
                             String name = memberNames.get(j);
                             String uid = members.get(name);
@@ -145,17 +143,6 @@ public class AddGroupActivity extends AppCompatActivity {
                                 }
                             }
                         }
-
-                        //Adding group to groups
-                        DatabaseReference groupsRef = database.getReference("groups");
-                        Group newGroup = new Group(groupName, members, null, null);
-                        groupsRef.push().setValue(newGroup).addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                addExpDialog.dismiss();
-                                finish();
-                            }
-                        });
                     }else{
                         Toast.makeText(AddGroupActivity.this,"A user with that email doesn't exist",Toast.LENGTH_LONG).show();
                     }
@@ -168,7 +155,24 @@ public class AddGroupActivity extends AppCompatActivity {
             }
         });
 
-        //TODO sistema l' aggiunta del gruppo nel database (togli la chiave iniziale)
+        //TODO: fix auto creation
+        //Adding group to groups
+        DatabaseReference groupsRef = database.getReference("groups");
+        Group newGroup = new Group(groupName, members, null, null);
+        groupsRef.push().setValue(newGroup).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                ArrayList memberNames = new ArrayList(members.keySet());
+                for(int k = 0; k < memberNames.size(); k++){
+                    String notificText = currentUser.getDisplayName()+" has added you";
+                    if (!members.get(memberNames.get(k)).equals(currentUser.getUid())){
+                        sendNotification(members.get(memberNames.get(k)),notificText,"Group created","notification");
+                    }
+                }
+                addExpDialog.dismiss();
+                finish();
+            }
+        });
 
     }
 
@@ -188,4 +192,27 @@ public class AddGroupActivity extends AppCompatActivity {
         }
     }
 
+    public static void sendNotification(String user_id,String message,String description,String type){
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("notifications").child(user_id);
+        String pushKey = databaseReference.push().getKey();
+
+        Notification notification = new Notification();
+        notification.setDescription(description);
+        notification.setMessage(message);
+        notification.setUser_id(user_id);
+        notification.setType(type);
+
+        Map<String, Object> forumValues = notification.toMap();
+        Map<String, Object> childUpdates = new HashMap<>();
+        childUpdates.put(pushKey, forumValues);
+        databaseReference.setPriority(ServerValue.TIMESTAMP);
+        databaseReference.updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                if(databaseError == null){
+
+                }
+            }
+        });
+    }
 }

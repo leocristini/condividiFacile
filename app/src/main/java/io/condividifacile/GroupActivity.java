@@ -58,10 +58,15 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class GroupActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -106,6 +111,8 @@ public class GroupActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
+        Intent notificationService = new Intent(this,FirebaseNotificationServices.class);
+        startService(notificationService);
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
@@ -122,6 +129,9 @@ public class GroupActivity extends AppCompatActivity
                 })
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
+
+        FirebaseMessaging.getInstance().subscribeToTopic("test");
+
 
         //navigation menu settings
         NavigationView navView = (NavigationView) findViewById(R.id.nav_view);
@@ -469,6 +479,8 @@ public class GroupActivity extends AppCompatActivity
                         }
                     }
                     userRef.child(memberId).child("groups").child(selectedGroup).child(currentUser.getDisplayName()).setValue(0);
+
+                    sendNotification(memberId,currentUser.getDisplayName()+"has just settled up","Settle up notification","notification");
                 }
             });
 
@@ -704,5 +716,29 @@ public class GroupActivity extends AppCompatActivity
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    public static void sendNotification(String user_id,String message,String description,String type){
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("notifications").child(user_id);
+        String pushKey = databaseReference.push().getKey();
+
+        Notification notification = new Notification();
+        notification.setDescription(description);
+        notification.setMessage(message);
+        notification.setUser_id(user_id);
+        notification.setType(type);
+
+        Map<String, Object> forumValues = notification.toMap();
+        Map<String, Object> childUpdates = new HashMap<>();
+        childUpdates.put(pushKey, forumValues);
+        databaseReference.setPriority(ServerValue.TIMESTAMP);
+        databaseReference.updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                if(databaseError == null){
+
+                }
+            }
+        });
     }
 }

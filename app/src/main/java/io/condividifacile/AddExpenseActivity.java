@@ -21,12 +21,14 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Map;
 
 public class AddExpenseActivity extends AppCompatActivity {
 
@@ -35,6 +37,7 @@ public class AddExpenseActivity extends AppCompatActivity {
     private ArrayList<Pair<String,Double>> userBalance;
     private FirebaseDatabase database;
     private DatabaseReference expenseRef;
+    private LinearLayout boxesLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +50,7 @@ public class AddExpenseActivity extends AppCompatActivity {
         title.setText("Add an expense to "+selectedGroup+":");
         //Getting group members, categories
         members = new ArrayList<>();
+        boxesLayout = (LinearLayout) findViewById(R.id.boxes_layout);
         final ArrayList<String> categories = new ArrayList<>();
         final AutoCompleteTextView categoryEdit = (AutoCompleteTextView) findViewById(R.id.categoryEdit);
         final ArrayAdapter<String> categoryAdapter = new ArrayAdapter<String>(AddExpenseActivity.this,android.R.layout.simple_spinner_dropdown_item,categories);
@@ -60,11 +64,11 @@ public class AddExpenseActivity extends AppCompatActivity {
             groupsRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    LinearLayout boxesLayout = (LinearLayout) findViewById(R.id.boxes_layout);
                     boxesLayout.removeAllViews();
                     members.clear();
                     for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                         if(singleSnapshot.child("name").getValue().equals(selectedGroup)) {
+                            Log.d("swag","checking group "+singleSnapshot.child("name").getValue());
                             expenseRef = singleSnapshot.child("expenses").getRef();
                             for(DataSnapshot membersSnap : singleSnapshot.child("members").getChildren()){
                                 String member = membersSnap.getKey();
@@ -72,8 +76,10 @@ public class AddExpenseActivity extends AppCompatActivity {
                                 members.add(new Pair<String, String>(member, id));
                                 if(!member.equals(user.getDisplayName())) {
                                     addMemberBox(member);
+                                    Log.d("swag","Added member box "+membersSnap.toString());
                                 }
                             }
+                            Log.d("swag",members.toString());
 
                             for(DataSnapshot categoriesSnap : singleSnapshot.child("categories").getChildren()){
                                 String category = categoriesSnap.getKey();
@@ -130,14 +136,18 @@ public class AddExpenseActivity extends AppCompatActivity {
 
                 exp.setDivision(divisions);
                 expenseRef.push().setValue(exp);
-
+                for(int i = 0; i < members.size(); i++){
+                    String notificText = "From "+user.getDisplayName()+" in "+selectedGroup;
+                    if(!members.get(i).first.equals(user.getDisplayName())) {
+                        sendNotification(members.get(i).second, notificText, "Expense added", "notification");
+                    }
+                }
                 final ArrayList<Pair<String,Double>> newUserBalance = new ArrayList<Pair<String, Double>>();
                 for(int i = 0; i < userBalance.size(); i++){
                     for(int j = 0; j < divisions.size(); j++){
                         if(divisions.get(userBalance.get(i).first) != null){
                             double oldBalance = userBalance.get(i).second;
                             double newBalance = Math.round((oldBalance + divisions.get(userBalance.get(i).first))*100.0)/100.0;
-                            Log.d("swag","Old balance for "+userBalance.get(i).first+" was "+oldBalance+", new balance is "+newBalance);
                             newUserBalance.add(new Pair<String, Double>(userBalance.get(i).first,newBalance));
                         }
                     }
@@ -147,9 +157,9 @@ public class AddExpenseActivity extends AppCompatActivity {
                 for(int i = 0; i < members.size(); i++){
 
                     //Updating balance for the logged user
-                    if(members.get(i).first.equalsIgnoreCase(user.getDisplayName())){
+                    if(members.get(i).first.equals(user.getDisplayName())){
                         for(int j = 0; j < newUserBalance.size(); j++) {
-                            if (!members.get(i).first.equalsIgnoreCase(newUserBalance.get(j).first)) {
+                            if (!members.get(i).first.equals(newUserBalance.get(j).first)) {
                                 usersRef.child(members.get(i).second).child("groups").child(selectedGroup).child(newUserBalance.get(j).first).setValue(newUserBalance.get(j).second);
                             }
                         }
@@ -157,7 +167,7 @@ public class AddExpenseActivity extends AppCompatActivity {
                     else{
                         double invertedBalance = 0;
                         for(int j = 0; j < newUserBalance.size(); j++){
-                            if(newUserBalance.get(j).first.equalsIgnoreCase(members.get(i).first)){
+                            if(newUserBalance.get(j).first.equals(members.get(i).first)){
                                 invertedBalance = -newUserBalance.get(j).second;
                             }
                         }
@@ -173,7 +183,6 @@ public class AddExpenseActivity extends AppCompatActivity {
     }
 
     private void addMemberBox(String member){
-        final LinearLayout boxesLayout = (LinearLayout) findViewById(R.id.boxes_layout);
         CheckBox box = new CheckBox(this);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.setMargins(0,10,0,0);
@@ -220,6 +229,30 @@ public class AddExpenseActivity extends AppCompatActivity {
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
+            }
+        });
+    }
+
+    public static void sendNotification(String user_id,String message,String description,String type){
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("notifications").child(user_id);
+        String pushKey = databaseReference.push().getKey();
+
+        Notification notification = new Notification();
+        notification.setDescription(description);
+        notification.setMessage(message);
+        notification.setUser_id(user_id);
+        notification.setType(type);
+
+        Map<String, Object> forumValues = notification.toMap();
+        Map<String, Object> childUpdates = new HashMap<>();
+        childUpdates.put(pushKey, forumValues);
+        databaseReference.setPriority(ServerValue.TIMESTAMP);
+        databaseReference.updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                if(databaseError == null){
+
+                }
             }
         });
     }
