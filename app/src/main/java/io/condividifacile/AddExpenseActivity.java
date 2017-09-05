@@ -62,6 +62,7 @@ public class AddExpenseActivity extends AppCompatActivity {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     LinearLayout boxesLayout = (LinearLayout) findViewById(R.id.boxes_layout);
                     boxesLayout.removeAllViews();
+                    members.clear();
                     for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                         if(singleSnapshot.child("name").getValue().equals(selectedGroup)) {
                             expenseRef = singleSnapshot.child("expenses").getRef();
