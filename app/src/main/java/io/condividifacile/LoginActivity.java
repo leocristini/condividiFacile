@@ -114,12 +114,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 //Fast registration
                                 usersRef.child(currentUser.getUid()).setValue(user);
                             }
-                            Intent i = new Intent(LoginActivity.this,GroupActivity.class);
-                            if(progressDialog != null) {
-                                progressDialog.dismiss();
-                                startActivity(i);
-                                finish();
-                            }
                         }
 
                         @Override
@@ -127,6 +121,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                         }
                     });
+                }
+                Intent i = new Intent(LoginActivity.this,GroupActivity.class);
+                if(progressDialog != null) {
+                    progressDialog.dismiss();
+                    startActivity(i);
+                    finish();
                 }
             }
         });
@@ -184,7 +184,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d("swag", "signInWithCredential:success");
-
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w("swag", "signInWithCredential:failure", task.getException());

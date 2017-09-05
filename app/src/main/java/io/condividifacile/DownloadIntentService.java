@@ -39,34 +39,33 @@ public class DownloadIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         PendingIntent reply = intent.getParcelableExtra(PENDING_RESULT_EXTRA);
-        try {
+        if(reply != null) {
             try {
-                URL url = new URL(intent.getStringExtra(URL_EXTRA));
-                Bitmap bm = null;
                 try {
-                    URLConnection conn = url.openConnection();
-                    conn.connect();
-                    InputStream is = conn.getInputStream();
-                    BufferedInputStream bis = new BufferedInputStream(is);
-                    bm = BitmapFactory.decodeStream(bis);
-                    bis.close();
-                    is.close();
-                } catch (IOException e) {
-                    Log.e("swag", "Error getting bitmap", e);
+                    URL url = new URL(intent.getStringExtra(URL_EXTRA));
+                    Bitmap bm = null;
+                    try {
+                        URLConnection conn = url.openConnection();
+                        conn.connect();
+                        InputStream is = conn.getInputStream();
+                        BufferedInputStream bis = new BufferedInputStream(is);
+                        bm = BitmapFactory.decodeStream(bis);
+                        bis.close();
+                        is.close();
+                    } catch (IOException e) {
+                        Log.e("swag", "Error getting bitmap", e);
+                    }
+
+                    Intent result = new Intent();
+                    result.putExtra(RSS_RESULT_EXTRA, bm);
+
+                    reply.send(this, RESULT_CODE, result);
+                } catch (MalformedURLException exc) {
+                    reply.send(INVALID_URL_CODE);
                 }
-
-                Intent result = new Intent();
-                result.putExtra(RSS_RESULT_EXTRA, bm);
-
-                reply.send(this, RESULT_CODE, result);
-            } catch (MalformedURLException exc) {
-                reply.send(INVALID_URL_CODE);
-            } catch (Exception exc) {
-                // could do better by treating the different sax/xml exceptions individually
-                reply.send(ERROR_CODE);
+            } catch (PendingIntent.CanceledException exc) {
+                Log.d(TAG, "reply cancelled", exc);
             }
-        } catch (PendingIntent.CanceledException exc) {
-            Log.d(TAG, "reply cancelled", exc);
         }
     }
 

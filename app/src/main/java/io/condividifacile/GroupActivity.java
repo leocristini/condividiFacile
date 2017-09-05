@@ -33,6 +33,7 @@ import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Description;
@@ -45,6 +46,12 @@ import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -61,6 +68,7 @@ public class GroupActivity extends AppCompatActivity
 
     //this is the main activity for the project, must contain the sliding window and the group page
     public static final int RSS_DOWNLOAD_REQUEST_CODE = 1;
+    private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
     private FirebaseUser currentUser;
@@ -97,6 +105,23 @@ public class GroupActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        // Build a GoogleApiClient with access to the Google Sign-In API and the
+        // options specified by gso.
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */, new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                        Log.d("swag", "onConnectionFailed:" + connectionResult);
+                    }
+                })
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
 
         //navigation menu settings
         NavigationView navView = (NavigationView) findViewById(R.id.nav_view);
@@ -137,7 +162,7 @@ public class GroupActivity extends AppCompatActivity
                             for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                                 String group = singleSnapshot.getKey();
                                 groups.add(group);
-                                navMenu.add(R.id.groups_menu,groups.indexOf(group),Menu.NONE,group);
+                                navMenu.add(R.id.groups_menu,groups.indexOf(group),Menu.NONE,group).setIcon(R.drawable.ic_group_black_24dp);
                             }
 
                         }
@@ -322,7 +347,18 @@ public class GroupActivity extends AppCompatActivity
 
         if (id == R.id.nav_share) {
 
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.nav_logout) {
+
+            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
+                @Override
+                public void onResult(@NonNull Status status) {
+                    FirebaseAuth.getInstance().signOut();
+                    Toast.makeText(GroupActivity.this,"Succesfully logged out",Toast.LENGTH_LONG).show();
+                    Intent loginIntent = new Intent(GroupActivity.this,LoginActivity.class);
+                    startActivity(loginIntent);
+                    finish();
+                }
+            });
 
         } else if (id == R.id.add_group){
 
@@ -392,7 +428,7 @@ public class GroupActivity extends AppCompatActivity
             TextView totalBalance = (TextView) findViewById(R.id.totalBalance);
             totalBalance.setVisibility(View.VISIBLE);
             totalBalance.setTypeface(null, Typeface.BOLD);
-            totalBalance.setText("Total balance: " + balanceSum);
+            totalBalance.setText("Total balance: "+balanceSum);
         }else{
             TextView totalBalance = (TextView) findViewById(R.id.totalBalance);
             totalBalance.setVisibility(View.VISIBLE);
@@ -667,5 +703,4 @@ public class GroupActivity extends AppCompatActivity
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
 }
