@@ -397,6 +397,7 @@ public class GroupActivity extends AppCompatActivity
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                     String member = singleSnapshot.getKey();
                     double balance = Double.parseDouble(singleSnapshot.getValue().toString());
+
                     Pair<String, Double> memberBalance = new Pair<String, Double>(member,balance);
                     userBalance.add(memberBalance);
                 }
@@ -493,6 +494,7 @@ public class GroupActivity extends AppCompatActivity
                     HashMap <String,String> groupMembers = (HashMap<String, String>) singleSnapshot.child("members").getValue();
                     if (name.equals(groupName) && groupMembers.containsKey(currentUser.getDisplayName())){
                         groupId = singleSnapshot.getKey();
+
                         for(DataSnapshot category : singleSnapshot.child("categories").getChildren()){
                             categories.add(category.getKey());
                         }
