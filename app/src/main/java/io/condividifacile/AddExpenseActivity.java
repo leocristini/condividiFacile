@@ -1,14 +1,19 @@
 package io.condividifacile;
 
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.util.Pair;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -21,35 +26,60 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 
 public class AddExpenseActivity extends AppCompatActivity {
 
-    private String selectedCategory;
     private String name;
+    private ArrayList <Pair<String,String>> members;
+    private ArrayList<Pair<String,Double>> userBalance;
+    private FirebaseDatabase database;
+    private DatabaseReference expenseRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_expense);
 
-        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        database = FirebaseDatabase.getInstance();
         final String selectedGroup = getIntent().getExtras().getString("selectedGroup");
+        TextView title = (TextView) findViewById(R.id.addExpTitle);
+        title.setText("Add an expense to "+selectedGroup+":");
+        //Getting group members, categories
+        members = new ArrayList<>();
+        final ArrayList<String> categories = new ArrayList<>();
+        final AutoCompleteTextView categoryEdit = (AutoCompleteTextView) findViewById(R.id.categoryEdit);
+        final ArrayAdapter<String> categoryAdapter = new ArrayAdapter<String>(AddExpenseActivity.this,android.R.layout.simple_spinner_dropdown_item,categories);
+        categoryEdit.setThreshold(0);
+        categoryEdit.setAdapter(categoryAdapter);
 
-        //Getting group members
-        final ArrayList <String> members = new ArrayList<>();
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             name = user.getDisplayName();
-            String email = user.getEmail();
-            String uid = user.getUid();
-            DatabaseReference groupsRef = database.getReference("groups/"+selectedGroup+"/members");
+            DatabaseReference groupsRef = database.getReference("groups");
             groupsRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
+                    LinearLayout boxesLayout = (LinearLayout) findViewById(R.id.boxes_layout);
+                    boxesLayout.removeAllViews();
                     for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
-                        String member = singleSnapshot.getKey();
-                        members.add(member);
-                        addMemberBox(member);
+                        if(singleSnapshot.child("name").getValue().equals(selectedGroup)) {
+                            expenseRef = singleSnapshot.child("expenses").getRef();
+                            for(DataSnapshot membersSnap : singleSnapshot.child("members").getChildren()){
+                                String member = membersSnap.getKey();
+                                String id = (String) membersSnap.getValue();
+                                members.add(new Pair<String, String>(member, id));
+                                if(!member.equals(user.getDisplayName())) {
+                                    addMemberBox(member);
+                                }
+                            }
+
+                            for(DataSnapshot categoriesSnap : singleSnapshot.child("categories").getChildren()){
+                                String category = categoriesSnap.getKey();
+                                categories.add(category);
+                                categoryAdapter.notifyDataSetChanged();
+                            }
+                        }
                     }
                 }
 
@@ -60,29 +90,8 @@ public class AddExpenseActivity extends AppCompatActivity {
             });
         }
 
-        //Getting group categories
-        final ArrayList<String> categories = new ArrayList<>();
-        final DatabaseReference categoriesRef = database.getReference("groups/"+selectedGroup+"/categories");
-        final AutoCompleteTextView categoryEdit = (AutoCompleteTextView) findViewById(R.id.categoryEdit);
-        final ArrayAdapter<String> categoryAdapter = new ArrayAdapter<String>(AddExpenseActivity.this,android.R.layout.simple_spinner_dropdown_item,categories);
-        categoryEdit.setThreshold(0);
-        categoryEdit.setAdapter(categoryAdapter);
-        categoriesRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
-                    String category = singleSnapshot.getKey();
-                    categories.add(category);
-                    categoryAdapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
+        //Getting user balance
+        getUserBalance(user.getUid(),selectedGroup);
         final EditText amountText = (EditText) findViewById(R.id.amountEdit);
 
         Calendar c = Calendar.getInstance();
@@ -94,7 +103,6 @@ public class AddExpenseActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                final DatabaseReference expenseRef = database.getReference("groups/"+selectedGroup+"/expenses");
                 float amount = Float.parseFloat(amountText.getText().toString());
                 String category = categoryEdit.getText().toString();
                 Expense exp = new Expense();
@@ -105,7 +113,58 @@ public class AddExpenseActivity extends AppCompatActivity {
                 exp.setBuyer(name);
                 exp.setDate(formattedDate);
                 exp.setAmount(amount);
+
+                LinearLayout boxesLayout = (LinearLayout) findViewById(R.id.boxes_layout);
+                int n_boxes = boxesLayout.getChildCount();
+                final ArrayList <String> selectedMembers = new ArrayList<String>();
+                selectedMembers.add(user.getDisplayName());
+                for(int i = 0 ; i < n_boxes; i++) {
+                    CheckBox memberBox = (CheckBox) boxesLayout.getChildAt(i);
+                    if(memberBox.isChecked()){
+                        selectedMembers.add(memberBox.getText().toString());
+                    }
+                }
+
+                final HashMap<String,Double> divisions = divideEqually(amount, selectedMembers);
+
+                exp.setDivision(divisions);
                 expenseRef.push().setValue(exp);
+
+                final ArrayList<Pair<String,Double>> newUserBalance = new ArrayList<Pair<String, Double>>();
+                for(int i = 0; i < userBalance.size(); i++){
+                    for(int j = 0; j < divisions.size(); j++){
+                        if(divisions.get(userBalance.get(i).first) != null){
+                            double oldBalance = userBalance.get(i).second;
+                            double newBalance = Math.round((oldBalance + divisions.get(userBalance.get(i).first))*100.0)/100.0;
+                            Log.d("swag","Old balance for "+userBalance.get(i).first+" was "+oldBalance+", new balance is "+newBalance);
+                            newUserBalance.add(new Pair<String, Double>(userBalance.get(i).first,newBalance));
+                        }
+                    }
+                }
+                DatabaseReference usersRef = database.getReference("users");
+
+                for(int i = 0; i < members.size(); i++){
+
+                    //Updating balance for the logged user
+                    if(members.get(i).first.equalsIgnoreCase(user.getDisplayName())){
+                        for(int j = 0; j < newUserBalance.size(); j++) {
+                            if (!members.get(i).first.equalsIgnoreCase(newUserBalance.get(j).first)) {
+                                usersRef.child(members.get(i).second).child("groups").child(selectedGroup).child(newUserBalance.get(j).first).setValue(newUserBalance.get(j).second);
+                            }
+                        }
+                    }//else update balance for other users in the group
+                    else{
+                        double invertedBalance = 0;
+                        for(int j = 0; j < newUserBalance.size(); j++){
+                            if(newUserBalance.get(j).first.equalsIgnoreCase(members.get(i).first)){
+                                invertedBalance = -newUserBalance.get(j).second;
+                            }
+                        }
+                        usersRef.child(members.get(i).second).child("groups").child(selectedGroup).child(user.getDisplayName()).setValue(invertedBalance);
+                    }
+                }
+
+
                 finish();
             }
         });
@@ -115,8 +174,52 @@ public class AddExpenseActivity extends AppCompatActivity {
     private void addMemberBox(String member){
         final LinearLayout boxesLayout = (LinearLayout) findViewById(R.id.boxes_layout);
         CheckBox box = new CheckBox(this);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.setMargins(0,10,0,0);
+        box.setLayoutParams(params);
+        box.setId(members.indexOf(member));
         box.setText(member);
         box.setChecked(true);
         boxesLayout.addView(box);
+    }
+
+    // returns an ArrayList<Double> with the total divided in equal amounts as by the divider parameter
+    public HashMap<String,Double> divideEqually(double total, ArrayList<String> members)
+    {
+        HashMap<String,Double> membersBalance = new HashMap<>();
+        int divider = members.size();
+        for(int i = 0; i < members.size(); i++) {
+            double amount = Math.round((total / divider) * 100.0) / 100.0;
+            membersBalance.put(members.get(i),amount);
+            total -= amount;
+            divider--;
+        }
+
+        return membersBalance;
+    }
+
+    //method to get user balance inside a group from DB
+    private void getUserBalance(String userId, String groupName){
+
+        userBalance = new ArrayList<>();
+        DatabaseReference balanceRef = database.getReference("users/"+userId+"/groups/"+groupName);
+        balanceRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
+                    String member = singleSnapshot.getKey();
+                    double balance = Double.parseDouble(singleSnapshot.getValue().toString());
+                    android.util.Pair<String, Double> memberBalance = new android.util.Pair<String, Double>(member,balance);
+                    userBalance.add(memberBalance);
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 }

@@ -9,13 +9,14 @@ import java.util.ArrayList;
 public class User {
 
     private String name;
-    private String mail;
+    private String email;
     private ArrayList<String> groups;
     private double saldo;
 
-    public User(String name, String mail, ArrayList<String> groups, double saldo) {
+    public User(String name, String email, ArrayList<String> groups, double saldo) {
         this.name = name;
-        this.mail = mail;
+        this.email = email;
+
         this.groups = groups;
         this.saldo = saldo;
     }
@@ -29,12 +30,13 @@ public class User {
         this.name = name;
     }
 
-    public String getMail() {
-        return mail;
+    public String getEmail() {
+        return email;
     }
 
-    public void setMail(String mail) {
-        this.mail = mail;
+    public void setEmail(String email) {
+        this.email = email;
+
     }
 
     public ArrayList<String> getGroups() {

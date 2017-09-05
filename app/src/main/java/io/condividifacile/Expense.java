@@ -1,7 +1,11 @@
 package io.condividifacile;
 
+import android.util.Pair;
+
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 /**
  * Created by gianma on 16/05/17.
@@ -15,6 +19,7 @@ public class Expense implements java.io.Serializable {
     private String date;
     private String description;
     private String photoPath;
+    private HashMap<String,Double> division;
 
     public String getCategory() {
         return category;
@@ -62,5 +67,13 @@ public class Expense implements java.io.Serializable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public HashMap<String, Double> getDivision() {
+        return division;
+    }
+
+    public void setDivision(HashMap<String, Double> division) {
+        this.division = division;
     }
 }

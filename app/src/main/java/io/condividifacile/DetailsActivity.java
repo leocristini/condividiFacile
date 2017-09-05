@@ -7,6 +7,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ImageView;
@@ -14,8 +15,6 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 public class DetailsActivity extends AppCompatActivity {
@@ -60,12 +59,14 @@ public class DetailsActivity extends AppCompatActivity {
         mAnimationManager = new ExpandOrCollapse();
 
         final TableLayout table = (TableLayout) findViewById(R.id.tableView);
+        int categoryExp = 0;
 
         for (int i = 0; i < exps.size(); i++) {
 
             if(exps.get(i).getCategory().equalsIgnoreCase(category)) {
+                categoryExp++;
                 final TableRow row = (TableRow) getLayoutInflater().inflate(R.layout.table_row_item, null);
-                if(i%2 == 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
+                if(categoryExp%2 == 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
                     row.setBackground(getResources().getDrawable(R.drawable.row_background));
                 }
                 TextView tv1 = (TextView) row.findViewById(R.id.cell1);
@@ -84,8 +85,13 @@ public class DetailsActivity extends AppCompatActivity {
                 amountView.setText(""+exps.get(i).getAmount());
                 TextView dateView = (TextView) expandableLayout.findViewById(R.id.dateText);
                 dateView.setText(exps.get(i).getDate());
-                //TextView descrView = (TextView) expandableLayout.findViewById(R.id.descrText);
-                //descrView.setText(exps.get(i).getDescription());
+                TextView descrView = (TextView) expandableLayout.findViewById(R.id.descrText);
+                String divided = "";
+                if(exps.get(i).getDivision() != null) {
+                    ArrayList <String> name = new ArrayList<>(exps.get(i).getDivision().keySet());
+                    divided = divided+name.get(0).split(" ")[0]+" ";
+                    descrView.setText(divided);
+                }
                 final ImageView imageView = (ImageView) expandableLayout.findViewById(R.id.photoView);
                 if (exps.get(i).getPhotoPath() != null){
                     imageView.setImageResource(R.drawable.ic_block_black_24dp);
@@ -98,8 +104,9 @@ public class DetailsActivity extends AppCompatActivity {
                     public void onClick(View v) {
 
                         if (!isExpanded[0]) {
+                            DisplayMetrics dm = getResources().getDisplayMetrics();
                             expandableLayout.setVisibility(View.VISIBLE);
-                            mAnimationManager.expand(expandableLayout, 500, 400);
+                            mAnimationManager.expand(expandableLayout, 500, dm.heightPixels/2);
                             isExpanded[0] = true;
                         }else{
                             mAnimationManager.collapse(expandableLayout, 500, 0);
