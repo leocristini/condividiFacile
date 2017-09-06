@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -64,14 +65,6 @@ public class AddGroupActivity extends AppCompatActivity {
 
         }
 
-        Button create_btn = (Button) findViewById(R.id.create_group);
-        create_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                createGroup();
-            }
-        });
-
     }
 
     private void createGroup(){
@@ -81,14 +74,15 @@ public class AddGroupActivity extends AppCompatActivity {
         addExpDialog.setMessage("Creating group...");
         addExpDialog.show();
 
-        EditText groupNameTxt = (EditText) findViewById(R.id.group_name);
-        final String groupName = groupNameTxt.getText().toString();
-
         final ArrayList<String> usersEmails = new ArrayList<>();
+        final HashMap<String,String> members = new HashMap<>();
 
         EditText firstMember = (EditText) findViewById(R.id.add_user);
+        String firstMail = firstMember.getText().toString();
         usersEmails.add(currentUser.getEmail());
-        usersEmails.add(firstMember.getText().toString());
+        if(!firstMail.equals("")) {
+            usersEmails.add(firstMail);
+        }
         View tmpView;
         LinearLayout ll = (LinearLayout) findViewById(R.id.add_users_layout);
         for(int i =0; i<ll.getChildCount();i++){
@@ -97,15 +91,13 @@ public class AddGroupActivity extends AppCompatActivity {
                 usersEmails.add(((EditText) tmpView).getText().toString());
             }
         }
+        EditText nameText = (EditText) findViewById(R.id.group_name);
+        final String groupName = nameText.getText().toString();
 
-        final HashMap<String,String> members = new HashMap<>();
-
-        //Adding user data to new group
         final DatabaseReference usersRef = database.getReference("users");
-        usersRef.addValueEventListener(new ValueEventListener() {
+        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-
                 //Check if user already has a group with that name
                 boolean groupExists = false;
                 for(DataSnapshot group : dataSnapshot.child(currentUser.getUid()).child("groups").getChildren()){
@@ -127,12 +119,11 @@ public class AddGroupActivity extends AppCompatActivity {
                             }
                         }
                     }
-                    if(usersEmails.size() == 0){
+                    if (usersEmails.size() == 0) {
                         usersExist = true;
                     }
-
                     //Creating new group balance inside each user
-                    if(usersExist) {
+                    if (usersExist) {
                         final ArrayList<String> memberNames = new ArrayList<String>(members.keySet());
                         for (int j = 0; j < memberNames.size(); j++) {
                             String name = memberNames.get(j);
@@ -143,9 +134,30 @@ public class AddGroupActivity extends AppCompatActivity {
                                 }
                             }
                         }
-                    }else{
-                        Toast.makeText(AddGroupActivity.this,"A user with that email doesn't exist",Toast.LENGTH_LONG).show();
+
+                        //Adding group to groups
+                        DatabaseReference groupsRef = database.getReference("groups");
+                        Group newGroup = new Group(groupName, members, null, null);
+                        groupsRef.push().setValue(newGroup).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                addExpDialog.dismiss();
+                                String message = currentUser.getDisplayName()+" added you to "+groupName;
+                                for(int i = 0; i < memberNames.size(); i++){
+                                    if(!memberNames.get(i).equals(currentUser.getDisplayName())){
+                                        sendNotification(members.get(memberNames.get(i)),message,"Group created","notification");
+                                    }
+                                }
+                                finish();
+                            }
+                        });
+                    } else {
+                        addExpDialog.dismiss();
+                        Toast.makeText(AddGroupActivity.this, "A user with that email doesn't exist", Toast.LENGTH_LONG).show();
                     }
+                } else {
+                    addExpDialog.dismiss();
+                    Toast.makeText(AddGroupActivity.this, "A group with that name already exists", Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -155,28 +167,9 @@ public class AddGroupActivity extends AppCompatActivity {
             }
         });
 
-        //TODO: fix auto creation
-        //Adding group to groups
-        DatabaseReference groupsRef = database.getReference("groups");
-        Group newGroup = new Group(groupName, members, null, null);
-        groupsRef.push().setValue(newGroup).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                ArrayList memberNames = new ArrayList(members.keySet());
-                for(int k = 0; k < memberNames.size(); k++){
-                    String notificText = currentUser.getDisplayName()+" has added you";
-                    if (!members.get(memberNames.get(k)).equals(currentUser.getUid())){
-                        sendNotification(members.get(memberNames.get(k)),notificText,"Group created","notification");
-                    }
-                }
-                addExpDialog.dismiss();
-                finish();
-            }
-        });
-
     }
 
-    void addMoreUsers(){
+    public void addMoreUsers(){
 
         if(numberOfLines < 5) {
             LinearLayout ll = (LinearLayout) findViewById(R.id.add_users_layout);

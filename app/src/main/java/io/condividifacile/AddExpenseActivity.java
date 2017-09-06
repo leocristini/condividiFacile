@@ -76,10 +76,8 @@ public class AddExpenseActivity extends AppCompatActivity {
                                 members.add(new Pair<String, String>(member, id));
                                 if(!member.equals(user.getDisplayName())) {
                                     addMemberBox(member);
-                                    Log.d("swag","Added member box "+membersSnap.toString());
                                 }
                             }
-                            Log.d("swag",members.toString());
 
                             for(DataSnapshot categoriesSnap : singleSnapshot.child("categories").getChildren()){
                                 String category = categoriesSnap.getKey();
