@@ -38,15 +38,6 @@ public class DetailsActivity extends AppCompatActivity {
         CollapsingToolbarLayout toolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
         toolbarLayout.setBackgroundColor(color);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         //creating test data
         expenses = (ArrayList<Expense>) getIntent().getExtras().getSerializable("expenses");
 
@@ -89,12 +80,10 @@ public class DetailsActivity extends AppCompatActivity {
                 String divided = "";
                 if(exps.get(i).getDivision() != null) {
                     ArrayList <String> name = new ArrayList<>(exps.get(i).getDivision().keySet());
-                    divided = divided+name.get(0).split(" ")[0]+" ";
+                    for(int j = 0; j < name.size(); j++) {
+                        divided = divided + name.get(j).split(" ")[0] + " ";
+                    }
                     descrView.setText(divided);
-                }
-                final ImageView imageView = (ImageView) expandableLayout.findViewById(R.id.photoView);
-                if (exps.get(i).getPhotoPath() != null){
-                    imageView.setImageResource(R.drawable.ic_block_black_24dp);
                 }
                 table.addView(expandableLayout);
 
@@ -106,7 +95,7 @@ public class DetailsActivity extends AppCompatActivity {
                         if (!isExpanded[0]) {
                             DisplayMetrics dm = getResources().getDisplayMetrics();
                             expandableLayout.setVisibility(View.VISIBLE);
-                            mAnimationManager.expand(expandableLayout, 500, dm.heightPixels/2);
+                            mAnimationManager.expand(expandableLayout, 500, dm.heightPixels/3);
                             isExpanded[0] = true;
                         }else{
                             mAnimationManager.collapse(expandableLayout, 500, 0);
