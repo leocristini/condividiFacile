@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.data;
 
 import java.util.ArrayList;
 import java.util.HashMap;

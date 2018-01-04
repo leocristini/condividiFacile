@@ -21,7 +21,7 @@
         android:orientation="vertical"
         android:rowCount="8"
         android:useDefaultMargins="true"
-        tools:context=".AddExpenseActivity">
+        tools:context=".activities.AddExpenseActivity">
 
         <TextView
             android:id="@+id/addExpTitle"

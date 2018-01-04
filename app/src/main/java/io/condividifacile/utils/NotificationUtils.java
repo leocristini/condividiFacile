@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.utils;
 
 import android.app.ActivityManager;
 import android.app.Notification;
@@ -27,6 +27,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
+import io.condividifacile.Config;
+import io.condividifacile.R;
 
 /**
  * Created by Ravi on 31/03/15.

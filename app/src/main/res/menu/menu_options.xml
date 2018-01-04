@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/options_menu"
-    tools:context=".GroupActivity">
+    tools:context=".activities.GroupActivity">
     <group>
         <item
             android:id="@+id/add_member"

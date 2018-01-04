@@ -1,11 +1,10 @@
-package io.condividifacile;
+package io.condividifacile.activities;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -28,6 +27,10 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import io.condividifacile.data.Notification;
+import io.condividifacile.R;
+import io.condividifacile.data.Group;
 
 public class AddGroupActivity extends AppCompatActivity {
 

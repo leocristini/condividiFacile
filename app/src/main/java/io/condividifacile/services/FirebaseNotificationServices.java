@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.services;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -16,6 +16,10 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+
+import io.condividifacile.data.Notification;
+import io.condividifacile.R;
+import io.condividifacile.activities.GroupActivity;
 
 /**
  * Created by gianma on 05/09/17.

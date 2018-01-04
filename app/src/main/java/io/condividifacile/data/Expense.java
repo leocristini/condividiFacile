@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.data;
 
 import android.util.Pair;
 

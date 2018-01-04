@@ -7,7 +7,7 @@
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:background="@color/bgColor"
-    tools:context="io.condividifacile.AddGroupActivity">
+    tools:context="io.condividifacile.activities.AddGroupActivity">
 
     <TextView
         android:layout_width="wrap_content"

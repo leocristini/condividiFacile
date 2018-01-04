@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.data;
 
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.ServerValue;

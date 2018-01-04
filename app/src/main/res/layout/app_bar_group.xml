@@ -5,7 +5,7 @@
     android:id="@+id/app_bar"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="io.condividifacile.GroupActivity">
+    tools:context="io.condividifacile.activities.GroupActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"

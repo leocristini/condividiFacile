@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.utils;
 
 import android.animation.ValueAnimator;
 import android.view.View;

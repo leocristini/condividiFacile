@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.services;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +11,10 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import io.condividifacile.Config;
+import io.condividifacile.utils.NotificationUtils;
+import io.condividifacile.activities.GroupActivity;
 
 /**
  * Created by Ravi Tamada on 08/08/16.

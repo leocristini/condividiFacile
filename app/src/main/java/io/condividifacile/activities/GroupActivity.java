@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.activities;
 
 import android.animation.Animator;
 import android.app.PendingIntent;
@@ -61,12 +61,17 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingService;
-import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import io.condividifacile.services.DownloadIntentService;
+import io.condividifacile.utils.ExpandOrCollapse;
+import io.condividifacile.services.FirebaseNotificationServices;
+import io.condividifacile.data.Notification;
+import io.condividifacile.R;
+import io.condividifacile.data.Expense;
 
 public class GroupActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -309,7 +314,7 @@ public class GroupActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+             super.onBackPressed();
         }
     }
 

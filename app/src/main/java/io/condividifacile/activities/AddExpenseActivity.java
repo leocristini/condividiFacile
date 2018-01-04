@@ -1,7 +1,6 @@
-package io.condividifacile;
+package io.condividifacile.activities;
 
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -29,6 +28,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+
+import io.condividifacile.data.Notification;
+import io.condividifacile.R;
+import io.condividifacile.data.Expense;
 
 public class AddExpenseActivity extends AppCompatActivity {
 
