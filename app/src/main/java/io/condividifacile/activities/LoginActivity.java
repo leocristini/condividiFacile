@@ -126,7 +126,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                         }
                     });
-                    Intent i = new Intent(LoginActivity.this,GroupActivity.class);
+                    Intent i = new Intent(LoginActivity.this,UserActivity.class);
                     if(progressDialog != null) {
                         progressDialog.dismiss();
                         startActivity(i);
@@ -158,7 +158,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser != null){
-            Intent i = new Intent(this, GroupActivity.class);
+            Intent i = new Intent(this, UserActivity.class);
             startActivity(i);
         }
     }

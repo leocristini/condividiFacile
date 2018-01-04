@@ -109,6 +109,8 @@ public class GroupActivity extends AppCompatActivity
         members = new ArrayList<>();
         userBalance = new ArrayList<>();
         pieChart = (PieChart) findViewById(R.id.piechart);
+        Intent userIntent = getIntent();
+        selectedGroup = userIntent.getStringExtra("selectedGroup");
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -146,6 +148,14 @@ public class GroupActivity extends AppCompatActivity
         final TextView nameView = (TextView) header.findViewById(R.id.nameView);
         final TextView emailView = (TextView) header.findViewById(R.id.emailView);
 
+        header.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(GroupActivity.this, UserActivity.class);
+                startActivity(i);
+            }
+        });
+
         //Getting user data and groups
         database = FirebaseDatabase.getInstance();
         mAuth = FirebaseAuth.getInstance();
@@ -167,6 +177,18 @@ public class GroupActivity extends AppCompatActivity
                         intent.putExtra(DownloadIntentService.URL_EXTRA, photoUrl);
                         intent.putExtra(DownloadIntentService.PENDING_RESULT_EXTRA, pendingResult);
                         startService(intent);
+                    }
+                    if(selectedGroup != null){
+                        GroupActivity.this.setTitle(selectedGroup);
+                        getGroupExpenses(selectedGroup);
+                        getUserBalance(uid,selectedGroup);
+                        shortBalance();
+                        FloatingActionButton addExpBtn = (FloatingActionButton) findViewById(R.id.addExp);
+                        if(selectedGroup == null){
+                            addExpBtn.setVisibility(View.INVISIBLE);
+                        }else{
+                            addExpBtn.setVisibility(View.VISIBLE);
+                        }
                     }
                     DatabaseReference groupsRef = database.getReference("users/" + uid + "/groups");
                     groupsRef.addValueEventListener(new ValueEventListener() {
@@ -250,6 +272,7 @@ public class GroupActivity extends AppCompatActivity
                             if(Math.abs(Y) > SLIDE_THRESHOLD){
                                 if(Y > 0){
                                     //Slide down
+                                    expandableLayout.performClick();
                                     if(isExpanded[0]){
                                         mAnimationManager.collapse(expandableLayout, 250, 200);
                                         isExpanded[0] = false;
