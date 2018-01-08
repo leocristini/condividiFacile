@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="?attr/actionBarSize"
-    tools:context=".GroupActivity">
+    tools:context=".activities.GroupActivity">
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/addExp"
@@ -22,6 +22,7 @@
 
     <GridLayout
         android:id="@+id/gridlayout"
+        android:background="@color/bgColor"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/expandableLayout"
@@ -46,7 +47,7 @@
         android:layout_height="200px"
         android:layout_alignParentBottom="true"
         android:gravity="center"
-        android:background="?attr/colorButtonNormal">
+        android:background="@color/colorPrimary">
 
         <TextView
             android:id="@+id/totalBalance"

@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.activities;
 
 import android.app.LoaderManager.LoaderCallbacks;
 import android.app.ProgressDialog;
@@ -40,6 +40,9 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.condividifacile.R;
+import io.condividifacile.data.User;
+
 /**
  * A login screen that offers login via email/password.
  */
@@ -59,7 +62,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private GoogleApiClient mGoogleApiClient;
     private FirebaseDatabase database;
     private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
     private User user;
     private String email;
     private String name;
@@ -124,12 +126,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                         }
                     });
-                }
-                Intent i = new Intent(LoginActivity.this,GroupActivity.class);
-                if(progressDialog != null) {
-                    progressDialog.dismiss();
-                    startActivity(i);
-                    finish();
+                    Intent i = new Intent(LoginActivity.this,UserActivity.class);
+                    if(progressDialog != null) {
+                        progressDialog.dismiss();
+                        startActivity(i);
+                        finish();
+                    }
                 }
             }
         });
@@ -156,7 +158,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser != null){
-            Intent i = new Intent(this, GroupActivity.class);
+            Intent i = new Intent(this, UserActivity.class);
             startActivity(i);
         }
     }

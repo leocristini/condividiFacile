@@ -6,10 +6,12 @@
     android:layout_height="match_parent"
     android:layout_alignParentBottom="false"
     android:orientation="vertical"
+    android:background="@color/bgColor"
     app:layout_anchorGravity="bottom">
 
     <GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
+        android:background="@color/bgColor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
@@ -19,7 +21,7 @@
         android:orientation="vertical"
         android:rowCount="8"
         android:useDefaultMargins="true"
-        tools:context=".AddExpenseActivity">
+        tools:context=".activities.AddExpenseActivity">
 
         <TextView
             android:id="@+id/addExpTitle"
@@ -90,6 +92,7 @@
     </GridLayout>
 
     <LinearLayout
+        android:background="@color/bgColor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"

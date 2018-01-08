@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.activities;
 
 import android.animation.Animator;
 import android.app.PendingIntent;
@@ -58,10 +58,20 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+
+import io.condividifacile.services.DownloadIntentService;
+import io.condividifacile.utils.ExpandOrCollapse;
+import io.condividifacile.services.FirebaseNotificationServices;
+import io.condividifacile.data.Notification;
+import io.condividifacile.R;
+import io.condividifacile.data.Expense;
 
 public class GroupActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -99,6 +109,8 @@ public class GroupActivity extends AppCompatActivity
         members = new ArrayList<>();
         userBalance = new ArrayList<>();
         pieChart = (PieChart) findViewById(R.id.piechart);
+        Intent userIntent = getIntent();
+        selectedGroup = userIntent.getStringExtra("selectedGroup");
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -106,6 +118,8 @@ public class GroupActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
+        Intent notificationService = new Intent(this,FirebaseNotificationServices.class);
+        startService(notificationService);
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
@@ -123,6 +137,9 @@ public class GroupActivity extends AppCompatActivity
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
+        FirebaseMessaging.getInstance().subscribeToTopic("test");
+
+
         //navigation menu settings
         NavigationView navView = (NavigationView) findViewById(R.id.nav_view);
         navView.setNavigationItemSelectedListener(this);
@@ -130,6 +147,14 @@ public class GroupActivity extends AppCompatActivity
         final Menu navMenu = navView.getMenu();
         final TextView nameView = (TextView) header.findViewById(R.id.nameView);
         final TextView emailView = (TextView) header.findViewById(R.id.emailView);
+
+        header.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(GroupActivity.this, UserActivity.class);
+                startActivity(i);
+            }
+        });
 
         //Getting user data and groups
         database = FirebaseDatabase.getInstance();
@@ -152,6 +177,18 @@ public class GroupActivity extends AppCompatActivity
                         intent.putExtra(DownloadIntentService.URL_EXTRA, photoUrl);
                         intent.putExtra(DownloadIntentService.PENDING_RESULT_EXTRA, pendingResult);
                         startService(intent);
+                    }
+                    if(selectedGroup != null){
+                        GroupActivity.this.setTitle(selectedGroup);
+                        getGroupExpenses(selectedGroup);
+                        getUserBalance(uid,selectedGroup);
+                        shortBalance();
+                        FloatingActionButton addExpBtn = (FloatingActionButton) findViewById(R.id.addExp);
+                        if(selectedGroup == null){
+                            addExpBtn.setVisibility(View.INVISIBLE);
+                        }else{
+                            addExpBtn.setVisibility(View.VISIBLE);
+                        }
                     }
                     DatabaseReference groupsRef = database.getReference("users/" + uid + "/groups");
                     groupsRef.addValueEventListener(new ValueEventListener() {
@@ -235,6 +272,7 @@ public class GroupActivity extends AppCompatActivity
                             if(Math.abs(Y) > SLIDE_THRESHOLD){
                                 if(Y > 0){
                                     //Slide down
+                                    expandableLayout.performClick();
                                     if(isExpanded[0]){
                                         mAnimationManager.collapse(expandableLayout, 250, 200);
                                         isExpanded[0] = false;
@@ -299,7 +337,7 @@ public class GroupActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+             super.onBackPressed();
         }
     }
 
@@ -469,6 +507,8 @@ public class GroupActivity extends AppCompatActivity
                         }
                     }
                     userRef.child(memberId).child("groups").child(selectedGroup).child(currentUser.getDisplayName()).setValue(0);
+
+                    sendNotification(memberId,currentUser.getDisplayName()+"has just settled up","Settle up notification","notification");
                 }
             });
 
@@ -704,5 +744,29 @@ public class GroupActivity extends AppCompatActivity
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    public static void sendNotification(String user_id,String message,String description,String type){
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("notifications").child(user_id);
+        String pushKey = databaseReference.push().getKey();
+
+        Notification notification = new Notification();
+        notification.setDescription(description);
+        notification.setMessage(message);
+        notification.setUser_id(user_id);
+        notification.setType(type);
+
+        Map<String, Object> forumValues = notification.toMap();
+        Map<String, Object> childUpdates = new HashMap<>();
+        childUpdates.put(pushKey, forumValues);
+        databaseReference.setPriority(ServerValue.TIMESTAMP);
+        databaseReference.updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                if(databaseError == null){
+
+                }
+            }
+        });
     }
 }

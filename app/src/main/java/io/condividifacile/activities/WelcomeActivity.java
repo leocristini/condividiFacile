@@ -1,4 +1,4 @@
-package io.condividifacile;
+package io.condividifacile.activities;
 
 import android.content.Context;
 import android.content.Intent;
@@ -18,8 +18,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import io.condividifacile.PrefManager;
+import io.condividifacile.R;
 
 public class WelcomeActivity extends AppCompatActivity {
 
@@ -48,7 +48,6 @@ public class WelcomeActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_welcome);
-
         viewPager = (ViewPager) findViewById(R.id.view_pager);
         dotsLayout = (LinearLayout) findViewById(R.id.layoutDots);
         btnSkip = (Button) findViewById(R.id.btn_skip);

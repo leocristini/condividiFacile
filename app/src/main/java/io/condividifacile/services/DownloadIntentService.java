@@ -1,12 +1,10 @@
-package io.condividifacile;
+package io.condividifacile.services;
 
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.Log;
 
 import java.io.BufferedInputStream;

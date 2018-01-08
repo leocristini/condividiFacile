@@ -5,17 +5,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".DetailsActivity"
+    tools:context=".activities.DetailsActivity"
     tools:showIn="@layout/activity_details">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="12dp"
+        android:background="@color/bgColor"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <TableLayout
             android:id="@+id/tableView"
+            android:background="@color/bgColor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="12dp"

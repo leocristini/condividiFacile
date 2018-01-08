@@ -10,38 +10,56 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/easysharelogo"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/easysharelogo"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".DetailsActivity"
+            android:name=".activities.DetailsActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".AddExpenseActivity"
-            android:label="@string/title_activity_add_expense"/>
         <activity
-            android:name=".LoginActivity"
-            android:label="@string/app_name">
-        </activity>
+            android:name=".activities.AddExpenseActivity"
+            android:label="@string/title_activity_add_expense" />
         <activity
-            android:name=".GroupActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:label="@string/title_activity_group"/>
-        <activity android:name=".AddGroupActivity"
-            android:label="@string/title_activity_add_group"/>
+            android:name=".activities.LoginActivity"
+            android:label="@string/app_name"></activity>
+        <activity
+            android:name=".activities.GroupActivity"
+            android:label="@string/title_activity_group"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.AddGroupActivity"
+            android:label="@string/title_activity_add_group" />
 
         <service
-            android:name=".DownloadIntentService"
+            android:name=".services.DownloadIntentService"
             android:exported="false" />
+        <service android:name=".services.MyFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <service android:name=".services.MyFirebaseInstanceIDService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+            </intent-filter>
+        </service>
+        <service android:name=".services.FirebaseNotificationServices" />
 
-        <activity android:name=".WelcomeActivity">
+        <activity
+            android:name=".activities.WelcomeActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activities.UserActivity"
+            android:label="@string/title_activity_user"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>
